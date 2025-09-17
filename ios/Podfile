@@ -1,0 +1,43 @@
+# Resolve react_native_pods.rb with node to allow for hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, min_ios_version_supported
+# New Architecture 비활성화 (콜백 브리지 호환성 목적)
+ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+ENV['USE_FRAMEWORKS'] = 'dynamic'
+prepare_react_native_project!
+
+linkage = ENV['USE_FRAMEWORKS']
+if linkage != nil
+  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+  use_frameworks! :linkage => linkage.to_sym
+end
+
+target 'SmartDoorManager' do
+  config = use_native_modules!
+  
+  # AppAuth for react-native-app-auth (호환성을 위해 1.7.0 사용)
+  pod 'AppAuth', '~> 1.7.0', :modular_headers => true
+  # MSAL for iOS native authentication (Microsoft official)
+  pod 'MSAL'
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  post_install do |installer|
+    # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false,
+      # :ccache_enabled => true
+    )
+  end
+end
