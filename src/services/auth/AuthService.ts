@@ -25,7 +25,6 @@ class AuthService {
 		// iOS: MSAL 네이티브 사용 (공식 권장)
 		if (Platform.OS === 'ios' && (NativeModules as any)?.MSALModule?.signInInteractive) {
 			try {
-				console.log('🔐[MSAL] iOS 인터랙티브 로그인 시작');
 				const MSALModule = (NativeModules as any).MSALModule;
 				// MSAL iOS 권장 형식: v2.0 제거된 권한 URL
 				const authority = msalConfig.auth.authority.replace(/\/v2\.0$/, '');
@@ -38,7 +37,6 @@ class AuthService {
 					authority,
 					scopes: msalScopes,
 				});
-				console.log('✅[MSAL] 로그인 성공');
 				const tokens: AuthResult = {
 					accessToken: res?.accessToken,
 					idToken: res?.idToken,
@@ -55,8 +53,6 @@ class AuthService {
 			}
 		}
 
-		// Android: 기존 라이브러리 유지
-		console.log('🔐[AppAuth] Android 인터랙티브 로그인 시작');
 		const result = await authorize({
 			...(appAuthConfig as any),
 		});

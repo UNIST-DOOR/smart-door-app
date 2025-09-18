@@ -11,27 +11,26 @@
 		761780ED2CA45674006654EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 761780EC2CA45674006654EE /* AppDelegate.swift */; };
 		7E68683761832FC038603994 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
-		85610BC32E78F15800F1C361 /* MaterialCommunityIcons.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 85610BC22E78F15800F1C361 /* MaterialCommunityIcons.ttf */; };
 		8576C4932E783A1F008C3E2A /* MSALModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8576C4922E783A1E008C3E2A /* MSALModule.swift */; };
 		8576C4952E783A42008C3E2A /* MSALModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 8576C4942E783A42008C3E2A /* MSALModuleBridge.m */; };
-		CC1FE9BA9083C163400C31F9 /* Pods_SmartDoorManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F69E163A1E9A98F002214644 /* Pods_SmartDoorManager.framework */; };
+		C5511EE9F8E4FB867996C0C0 /* Pods_SmartDoorManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E9B3066192A31119ECF1ED9B /* Pods_SmartDoorManager.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0643896E11D6A5DC1B71BE8F /* Pods-SmartDoorManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartDoorManager.debug.xcconfig"; path = "Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager.debug.xcconfig"; sourceTree = "<group>"; };
+		09AC7A7218F186E544BD96E2 /* Pods-SmartDoorManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartDoorManager.release.xcconfig"; path = "Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager.release.xcconfig"; sourceTree = "<group>"; };
 		13B07F961A680F5B00A75B9A /* SmartDoorManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmartDoorManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = SmartDoorManager/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = SmartDoorManager/Info.plist; sourceTree = "<group>"; };
 		13B07FB81A68108700A75B9A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = PrivacyInfo.xcprivacy; path = SmartDoorManager/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		149D831931F2727E49D16EB3 /* Pods-SmartDoorManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartDoorManager.release.xcconfig"; path = "Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager.release.xcconfig"; sourceTree = "<group>"; };
+		53A5E6604918482615BB3D73 /* Pods-SmartDoorManager.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SmartDoorManager.debug.xcconfig"; path = "Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager.debug.xcconfig"; sourceTree = "<group>"; };
 		761780EC2CA45674006654EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = SmartDoorManager/AppDelegate.swift; sourceTree = "<group>"; };
 		81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = LaunchScreen.storyboard; path = SmartDoorManager/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		85610BC22E78F15800F1C361 /* MaterialCommunityIcons.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; name = MaterialCommunityIcons.ttf; path = "../node_modules/react-native-vector-icons/Fonts/MaterialCommunityIcons.ttf"; sourceTree = "<group>"; };
 		8576C4922E783A1E008C3E2A /* MSALModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MSALModule.swift; path = SmartDoorManager/MSALModule.swift; sourceTree = "<group>"; };
 		8576C4942E783A42008C3E2A /* MSALModuleBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSALModuleBridge.m; path = SmartDoorManager/MSALModuleBridge.m; sourceTree = "<group>"; };
 		85E562822E77CCB100AA1948 /* AppAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AppAuth.h; path = Pods/AppAuth/Sources/AppAuth.h; sourceTree = "<group>"; };
+		E9B3066192A31119ECF1ED9B /* Pods_SmartDoorManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SmartDoorManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
-		F69E163A1E9A98F002214644 /* Pods_SmartDoorManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SmartDoorManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -39,7 +38,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				CC1FE9BA9083C163400C31F9 /* Pods_SmartDoorManager.framework in Frameworks */,
+				C5511EE9F8E4FB867996C0C0 /* Pods_SmartDoorManager.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,7 +62,7 @@
 			children = (
 				85E562822E77CCB100AA1948 /* AppAuth.h */,
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				F69E163A1E9A98F002214644 /* Pods_SmartDoorManager.framework */,
+				E9B3066192A31119ECF1ED9B /* Pods_SmartDoorManager.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -103,8 +102,8 @@
 		BBD78D7AC51CEA395F1C20DB /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				0643896E11D6A5DC1B71BE8F /* Pods-SmartDoorManager.debug.xcconfig */,
-				149D831931F2727E49D16EB3 /* Pods-SmartDoorManager.release.xcconfig */,
+				53A5E6604918482615BB3D73 /* Pods-SmartDoorManager.debug.xcconfig */,
+				09AC7A7218F186E544BD96E2 /* Pods-SmartDoorManager.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -116,13 +115,14 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "SmartDoorManager" */;
 			buildPhases = (
-				D2AF7B9F50B66E62584F1329 /* [CP] Check Pods Manifest.lock */,
+				D9298AA5170C18BD368D93E0 /* [CP] Check Pods Manifest.lock */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				FD596972837741FE890DCBCE /* [CP] Embed Pods Frameworks */,
-				AEACD5E403455E3C32BCFA4A /* [CP] Copy Pods Resources */,
+				FB366634E4B735FE437AA7B2 /* [CP] Embed Pods Frameworks */,
+				0BBEEC415ACBC810C9CD7182 /* [CP] Copy Pods Resources */,
+				B0AD21412E7BC55C00E0D0E8 /* Copy Hermes dSYM */,
 			);
 			buildRules = (
 			);
@@ -169,7 +169,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				85610BC32E78F15800F1C361 /* MaterialCommunityIcons.ttf in Resources */,
 				81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				7E68683761832FC038603994 /* PrivacyInfo.xcprivacy in Resources */,
@@ -195,7 +194,7 @@
 			shellPath = /bin/sh;
 			shellScript = "set -e\n\nWITH_ENVIRONMENT=\"$REACT_NATIVE_PATH/scripts/xcode/with-environment.sh\"\nREACT_NATIVE_XCODE=\"$REACT_NATIVE_PATH/scripts/react-native-xcode.sh\"\n\n/bin/sh -c \"$WITH_ENVIRONMENT $REACT_NATIVE_XCODE\"\n";
 		};
-		AEACD5E403455E3C32BCFA4A /* [CP] Copy Pods Resources */ = {
+		0BBEEC415ACBC810C9CD7182 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -203,16 +202,39 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager-resources-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Copy Pods Resources";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		D2AF7B9F50B66E62584F1329 /* [CP] Check Pods Manifest.lock */ = {
+		B0AD21412E7BC55C00E0D0E8 /* Copy Hermes dSYM */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Hermes dSYM";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nset -e\nHERMES_DSYM=\"${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/ios/hermes.framework.dSYM\"\nDEST=\"${DWARF_DSYM_FOLDER_PATH}\"\nif [ -d \"$HERMES_DSYM\" ]; then\n  rsync -a \"$HERMES_DSYM\" \"$DEST\"\nfi\n";
+		};
+		D9298AA5170C18BD368D93E0 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -234,7 +256,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		FD596972837741FE890DCBCE /* [CP] Embed Pods Frameworks */ = {
+		FB366634E4B735FE437AA7B2 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -242,9 +264,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -269,12 +295,14 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 0643896E11D6A5DC1B71BE8F /* Pods-SmartDoorManager.debug.xcconfig */;
+			baseConfigurationReference = 53A5E6604918482615BB3D73 /* Pods-SmartDoorManager.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = HVAVTQL86W;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -450,6 +478,7 @@
 					"$(PODS_CONFIGURATION_BUILD_DIR)",
 				);
 				MARKETING_VERSION = 1.0.0;
+				NODE_BINARY = /Users/hyunjunhan/.nvm/versions/node/v24.7.0/bin/node;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -457,6 +486,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.smartdoormanager;
 				PRODUCT_NAME = SmartDoorManager;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/SmartDoorManager/SmartDoorManager-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
@@ -467,12 +497,15 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 149D831931F2727E49D16EB3 /* Pods-SmartDoorManager.release.xcconfig */;
+			baseConfigurationReference = 09AC7A7218F186E544BD96E2 /* Pods-SmartDoorManager.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
-				CURRENT_PROJECT_VERSION = 3;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 12;
 				DEVELOPMENT_TEAM = HVAVTQL86W;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -647,6 +680,7 @@
 					"$(PODS_CONFIGURATION_BUILD_DIR)",
 				);
 				MARKETING_VERSION = 1.0.0;
+				NODE_BINARY = /Users/hyunjunhan/.nvm/versions/node/v24.7.0/bin/node;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -654,6 +688,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.smartdoormanager;
 				PRODUCT_NAME = SmartDoorManager;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(SRCROOT)/SmartDoorManager/SmartDoorManager-Bridging-Header.h";
 				SWIFT_PRECOMPILE_BRIDGING_HEADER = YES;
 				SWIFT_VERSION = 5.0;

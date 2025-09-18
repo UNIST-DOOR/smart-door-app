@@ -1,0 +1,1600 @@
+diff --git a/node_modules/react-native/LICENSE 2 b/node_modules/react-native/LICENSE 2
+new file mode 100644
+index 0000000..b93be90
+--- /dev/null
++++ b/node_modules/react-native/LICENSE 2	
+@@ -0,0 +1,21 @@
++MIT License
++
++Copyright (c) Meta Platforms, Inc. and affiliates.
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in all
++copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++SOFTWARE.
+diff --git a/node_modules/react-native/README 2.md b/node_modules/react-native/README 2.md
+new file mode 100644
+index 0000000..502b38b
+--- /dev/null
++++ b/node_modules/react-native/README 2.md	
+@@ -0,0 +1,141 @@
++<h1 align="center">
++  <a href="https://reactnative.dev/">
++    React Native
++  </a>
++</h1>
++
++<p align="center">
++  <strong>Learn once, write anywhere:</strong><br>
++  Build mobile apps with React.
++</p>
++
++<p align="center">
++  <a href="https://github.com/facebook/react-native/blob/HEAD/LICENSE">
++    <img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="React Native is released under the MIT license." />
++  </a>
++  <a href="https://www.npmjs.org/package/react-native">
++    <img src="https://img.shields.io/npm/v/react-native?color=brightgreen&label=npm%20package" alt="Current npm package version." />
++  </a>
++  <a href="https://reactnative.dev/docs/contributing">
++    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome!" />
++  </a>
++  <a href="https://twitter.com/intent/follow?screen_name=reactnative">
++    <img src="https://img.shields.io/twitter/follow/reactnative.svg?label=Follow%20@reactnative" alt="Follow @reactnative" />
++  </a>
++</p>
++
++<h3 align="center">
++  <a href="https://reactnative.dev/docs/getting-started">Getting Started</a>
++  <span> · </span>
++  <a href="https://reactnative.dev/docs/tutorial">Learn the Basics</a>
++  <span> · </span>
++  <a href="https://reactnative.dev/showcase">Showcase</a>
++  <span> · </span>
++  <a href="https://reactnative.dev/docs/contributing">Contribute</a>
++  <span> · </span>
++  <a href="https://reactnative.dev/help">Community</a>
++  <span> · </span>
++  <a href="https://github.com/facebook/react-native/blob/HEAD/.github/SUPPORT.md">Support</a>
++</h3>
++
++React Native brings [**React**'s][r] declarative UI framework to iOS and Android. With React Native, you use native UI controls and have full access to the native platform.
++
++- **Declarative.** React makes it painless to create interactive UIs. Declarative views make your code more predictable and easier to debug.
++- **Component-Based.** Build encapsulated components that manage their state, then compose them to make complex UIs.
++- **Developer Velocity.** See local changes in seconds. Changes to JavaScript code can be live reloaded without rebuilding the native app.
++- **Portability.** Reuse code across iOS, Android, and [other platforms][p].
++
++React Native is developed and supported by many companies and individual core contributors. Find out more in our [ecosystem overview][e].
++
++[r]: https://react.dev/
++[p]: https://reactnative.dev/docs/out-of-tree-platforms
++[e]: https://github.com/facebook/react-native/blob/HEAD/ECOSYSTEM.md
++
++## Contents
++
++- [Requirements](#-requirements)
++- [Building your first React Native app](#-building-your-first-react-native-app)
++- [Documentation](#-documentation)
++- [Upgrading](#-upgrading)
++- [How to Contribute](#-how-to-contribute)
++- [Code of Conduct](#code-of-conduct)
++- [License](#-license)
++
++
++## 📋 Requirements
++
++React Native apps may target iOS 15.1 and Android 7.0 (API 24) or newer. You may use Windows, macOS, or Linux as your development operating system, though building and running iOS apps is limited to macOS. Tools like [Expo](https://expo.dev) can be used to work around this.
++
++## 🎉 Building your first React Native app
++
++Follow the [Getting Started guide](https://reactnative.dev/docs/getting-started). The recommended way to install React Native depends on your project. Here you can find short guides for the most common scenarios:
++
++- [Trying out React Native][hello-world]
++- [Creating a New Application][new-app]
++- [Adding React Native to an Existing Application][existing]
++
++[hello-world]: https://snack.expo.dev/@samples/hello-world
++[new-app]: https://reactnative.dev/docs/getting-started
++[existing]: https://reactnative.dev/docs/integration-with-existing-apps
++
++## 📖 Documentation
++
++The full documentation for React Native can be found on our [website][docs].
++
++The React Native documentation discusses components, APIs, and topics that are specific to React Native. For further documentation on the React API that is shared between React Native and React DOM, refer to the [React documentation][r-docs].
++
++The source for the React Native documentation and website is hosted on a separate repository, [**@facebook/react-native-website**][repo-website].
++
++[docs]: https://reactnative.dev/docs/getting-started
++[r-docs]: https://react.dev/learn
++[repo-website]: https://github.com/facebook/react-native-website
++
++## 🚀 Upgrading
++
++Upgrading to new versions of React Native may give you access to more APIs, views, developer tools, and other goodies. See the [Upgrading Guide][u] for instructions.
++
++React Native releases are discussed [in this discussion repo](https://github.com/reactwg/react-native-releases/discussions).
++
++[u]: https://reactnative.dev/docs/upgrading
++[repo-releases]: https://github.com/react-native-community/react-native-releases
++
++## 👏 How to Contribute
++
++The main purpose of this repository is to continue evolving React Native core. We want to make contributing to this project as easy and transparent as possible, and we are grateful to the community for contributing bug fixes and improvements. Read below to learn how you can take part in improving React Native.
++
++### [Code of Conduct][code]
++
++Facebook has adopted a Code of Conduct that we expect project participants to adhere to.
++Please read the [full text][code] so that you can understand what actions will and will not be tolerated.
++
++[code]: https://code.fb.com/codeofconduct/
++
++### [Contributing Guide][contribute]
++
++Read our [**Contributing Guide**][contribute] to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React Native.
++
++[contribute]: https://reactnative.dev/docs/contributing
++
++### [Open Source Roadmap][roadmap]
++
++You can learn more about our vision for React Native in the [**Roadmap**][roadmap].
++
++[roadmap]: https://github.com/facebook/react-native/wiki/Roadmap
++
++### Good First Issues
++
++We have a list of [good first issues][gfi] that contain bugs which have a relatively limited scope. This is a great place to get started, gain experience, and get familiar with our contribution process.
++
++[gfi]: https://github.com/facebook/react-native/labels/good%20first%20issue
++
++### Discussions
++
++Larger discussions and proposals are discussed in [**@react-native-community/discussions-and-proposals**][repo-meta].
++
++[repo-meta]: https://github.com/react-native-community/discussions-and-proposals
++
++## 📄 License
++
++React Native is MIT licensed, as found in the [LICENSE][l] file.
++
++[l]: https://github.com/facebook/react-native/blob/main/LICENSE
+diff --git a/node_modules/react-native/React 2.podspec b/node_modules/react-native/React 2.podspec
+new file mode 100644
+index 0000000..59b9f83
+--- /dev/null
++++ b/node_modules/react-native/React 2.podspec	
+@@ -0,0 +1,56 @@
++# Copyright (c) Meta Platforms, Inc. and affiliates.
++#
++# This source code is licensed under the MIT license found in the
++# LICENSE file in the root directory of this source tree.
++
++require "json"
++
++package = JSON.parse(File.read(File.join(__dir__, "package.json")))
++version = package['version']
++
++source = { :git => 'https://github.com/facebook/react-native.git' }
++if version == '1000.0.0'
++  # This is an unpublished version, use the latest commit hash of the react-native repo, which we’re presumably in.
++  source[:commit] = `git rev-parse HEAD`.strip if system("git rev-parse --git-dir > /dev/null 2>&1")
++else
++  source[:tag] = "v#{version}"
++end
++
++Pod::Spec.new do |s|
++  s.name                   = "React"
++  s.version                = version
++  s.summary                = package["description"]
++  s.description            = <<-DESC
++                               React Native apps are built using the React JS
++                               framework, and render directly to native UIKit
++                               elements using a fully asynchronous architecture.
++                               There is no browser and no HTML. We have picked what
++                               we think is the best set of features from these and
++                               other technologies to build what we hope to become
++                               the best product development framework available,
++                               with an emphasis on iteration speed, developer
++                               delight, continuity of technology, and absolutely
++                               beautiful and fast products with no compromises in
++                               quality or capability.
++                             DESC
++  s.homepage               = "https://reactnative.dev/"
++  s.license                = package["license"]
++  s.author                 = "Meta Platforms, Inc. and its affiliates"
++  s.platforms              = min_supported_versions
++  s.source                 = source
++  s.preserve_paths         = "package.json", "LICENSE", "LICENSE-docs"
++  s.cocoapods_version      = ">= 1.10.1"
++
++  s.dependency "React-Core", version
++  s.dependency "React-Core/DevSupport", version
++  s.dependency "React-Core/RCTWebSocket", version
++  s.dependency "React-RCTActionSheet", version
++  s.dependency "React-RCTAnimation", version
++  s.dependency "React-RCTBlob", version
++  s.dependency "React-RCTImage", version
++  s.dependency "React-RCTLinking", version
++  s.dependency "React-RCTNetwork", version
++  s.dependency "React-RCTSettings", version
++  s.dependency "React-RCTText", version
++  s.dependency "React-RCTVibration", version
++end
+diff --git a/node_modules/react-native/React-Core 2.podspec b/node_modules/react-native/React-Core 2.podspec
+new file mode 100644
+index 0000000..630a737
+--- /dev/null
++++ b/node_modules/react-native/React-Core 2.podspec	
+@@ -0,0 +1,136 @@
++# Copyright (c) Meta Platforms, Inc. and affiliates.
++#
++# This source code is licensed under the MIT license found in the
++# LICENSE file in the root directory of this source tree.
++
++require "json"
++
++package = JSON.parse(File.read(File.join(__dir__, "package.json")))
++version = package['version']
++
++source = { :git => 'https://github.com/facebook/react-native.git' }
++if version == '1000.0.0'
++  # This is an unpublished version, use the latest commit hash of the react-native repo, which we’re presumably in.
++  source[:commit] = `git rev-parse HEAD`.strip if system("git rev-parse --git-dir > /dev/null 2>&1")
++else
++  source[:tag] = "v#{version}"
++end
++
++use_hermes = ENV['USE_HERMES'] == nil || ENV['USE_HERMES'] == '1'
++use_hermes_flag = use_hermes ? "-DUSE_HERMES=1" : ""
++use_third_party_jsc_flag = ENV['USE_THIRD_PARTY_JSC'] == '1' ? "-DUSE_THIRD_PARTY_JSC=1" : ""
++
++header_subspecs = {
++  'CoreModulesHeaders'          => 'React/CoreModules/**/*.h',
++  'RCTActionSheetHeaders'       => 'Libraries/ActionSheetIOS/*.h',
++  'RCTAnimationHeaders'         => 'Libraries/NativeAnimation/{Drivers/*,Nodes/*,*}.{h}',
++  'RCTBlobHeaders'              => 'Libraries/Blob/{RCTBlobManager,RCTFileReaderModule}.h',
++  'RCTImageHeaders'             => 'Libraries/Image/*.h',
++  'RCTLinkingHeaders'           => 'Libraries/LinkingIOS/*.h',
++  'RCTNetworkHeaders'           => 'Libraries/Network/*.h',
++  'RCTPushNotificationHeaders'  => 'Libraries/PushNotificationIOS/*.h',
++  'RCTSettingsHeaders'          => 'Libraries/Settings/*.h',
++  'RCTTextHeaders'              => 'Libraries/Text/**/*.h',
++  'RCTVibrationHeaders'         => 'Libraries/Vibration/*.h',
++}
++
++frameworks_search_paths = []
++frameworks_search_paths << "\"$(PODS_CONFIGURATION_BUILD_DIR)/React-hermes\"" if use_hermes
++
++header_search_paths = [
++  "$(PODS_TARGET_SRCROOT)/ReactCommon",
++  "${PODS_ROOT}/Headers/Public/FlipperKit",
++  "$(PODS_ROOT)/Headers/Public/ReactCommon",
++].concat(use_hermes ? [
++  "$(PODS_ROOT)/Headers/Public/React-hermes",
++  "$(PODS_ROOT)/Headers/Public/hermes-engine"
++] : [])
++
++Pod::Spec.new do |s|
++  s.name                   = "React-Core"
++  s.version                = version
++  s.summary                = "The core of React Native."
++  s.homepage               = "https://reactnative.dev/"
++  s.license                = package["license"]
++  s.author                 = "Meta Platforms, Inc. and its affiliates"
++  s.platforms              = min_supported_versions
++  s.source                 = source
++  s.resource_bundle        = { "RCTI18nStrings" => ["React/I18n/strings/*.lproj"]}
++  s.compiler_flags         = use_hermes_flag + ' ' + use_third_party_jsc_flag
++  s.header_dir             = "React"
++  s.weak_framework         = "JavaScriptCore"
++  s.pod_target_xcconfig    = {
++                               "HEADER_SEARCH_PATHS" => header_search_paths,
++                               "DEFINES_MODULE" => "YES",
++                               "GCC_PREPROCESSOR_DEFINITIONS" => "RCT_METRO_PORT=${RCT_METRO_PORT}",
++                               "CLANG_CXX_LANGUAGE_STANDARD" => rct_cxx_language_standard(),
++                               "FRAMEWORK_SEARCH_PATHS" => frameworks_search_paths.join(" ")
++                             }
++  s.user_target_xcconfig   = { "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/Headers/Private/React-Core\""}
++  s.default_subspec        = "Default"
++
++  s.subspec "Default" do |ss|
++    ss.source_files           = "React/**/*.{c,h,m,mm,S,cpp}"
++    exclude_files = [
++      "React/CoreModules/**/*",
++      "React/DevSupport/**/*",
++      "React/Fabric/**/*",
++      "React/FBReactNativeSpec/**/*",
++      "React/Tests/**/*",
++      "React/Inspector/**/*",
++      "React/Runtime/**/*",
++    ]
++    # If we are using Hermes (the default is use hermes, so USE_HERMES can be nil), we don't have jsc installed
++    # So we have to exclude the JSCExecutorFactory
++    if use_hermes
++      exclude_files = exclude_files.append("React/CxxBridge/JSCExecutorFactory.{h,mm}")
++    elsif ENV['USE_THIRD_PARTY_JSC'] == '1'
++      exclude_files = exclude_files.append("React/CxxBridge/JSCExecutorFactory.{h,mm}")
++    end
++
++    ss.exclude_files = exclude_files
++    ss.private_header_files   = "React/Cxx*/*.h"
++  end
++
++  s.subspec "DevSupport" do |ss|
++    ss.source_files = "React/DevSupport/*.{h,mm,m}",
++                      "React/Inspector/*.{h,mm,m}"
++
++    ss.dependency "React-Core/Default", version
++    ss.dependency "React-Core/RCTWebSocket", version
++    ss.private_header_files = "React/Inspector/RCTCxx*.h"
++  end
++
++  s.subspec "RCTWebSocket" do |ss|
++    ss.source_files = "Libraries/WebSocket/*.{h,m}"
++    ss.dependency "React-Core/Default", version
++  end
++
++  # Add a subspec containing just the headers for each
++  # pod that should live under <React/*.h>
++  header_subspecs.each do |name, headers|
++    s.subspec name do |ss|
++      ss.source_files = headers
++      ss.dependency "React-Core/Default"
++    end
++  end
++
++  s.dependency "React-cxxreact"
++  s.dependency "React-perflogger"
++  s.dependency "React-jsi"
++  s.dependency "React-jsiexecutor"
++  s.dependency "React-utils"
++  s.dependency "React-featureflags"
++  s.dependency "React-runtimescheduler"
++  s.dependency "Yoga"
++
++  s.resource_bundles = {'React-Core_privacy' => 'React/Resources/PrivacyInfo.xcprivacy'}
++
++  add_dependency(s, "React-jsinspector", :framework_name => 'jsinspector_modern')
++  add_dependency(s, "React-jsinspectorcdp", :framework_name => 'jsinspector_moderncdp')
++  add_dependency(s, "React-jsitooling", :framework_name => "JSITooling")
++  add_dependency(s, "RCTDeprecation")
++
++  depend_on_js_engine(s)
++  add_rn_third_party_dependencies(s)
++end
+diff --git a/node_modules/react-native/build.gradle 2.kts b/node_modules/react-native/build.gradle 2.kts
+new file mode 100644
+index 0000000..2667e53
+--- /dev/null
++++ b/node_modules/react-native/build.gradle 2.kts	
+@@ -0,0 +1,20 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++// This is the top level build.gradle.kts file used when the users
++// is doing a build from source. It's triggered as the user
++// will add an `includeBuild(../node_modules/react-native)` in
++// their settings.gradle.kts file.
++// More on this here: https://reactnative.dev/contributing/how-to-build-from-source
++plugins {
++  alias(libs.plugins.android.library) apply false
++  alias(libs.plugins.android.application) apply false
++  alias(libs.plugins.download) apply false
++  alias(libs.plugins.kotlin.android) apply false
++}
++
++buildscript { dependencies { classpath("com.facebook.react:react-native-gradle-plugin") } }
+diff --git a/node_modules/react-native/cli 2.js b/node_modules/react-native/cli 2.js
+new file mode 100755
+index 0000000..4c10302
+--- /dev/null
++++ b/node_modules/react-native/cli 2.js	
+@@ -0,0 +1,253 @@
++#!/usr/bin/env node
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ */
++
++'use strict';
++
++const {name, version: currentVersion} = require('./package.json');
++const chalk = require('chalk');
++const {spawn} = require('child_process');
++const {get} = require('https');
++const semver = require('semver');
++const {URL} = require('url');
++
++const deprecated = () => {
++  throw new Error(
++    'react-native/cli is deprecated, please use @react-native-community/cli instead',
++  );
++};
++
++function findCommunityCli(startDir = process.cwd()) {
++  // With isolated node_modules (eg pnpm), we won't be able to find
++  // `@react-native-community/cli` starting from the `react-native` directory.
++  // Instead, we should use the project root, which we assume to be the cwd.
++  const options = {paths: [startDir]};
++  const rncli = require.resolve('@react-native-community/cli', options);
++  return require(rncli);
++}
++
++function isMissingCliDependency(error) {
++  return (
++    error.code === 'MODULE_NOT_FOUND' &&
++    /@react-native-community\/cli/.test(error.message)
++  );
++}
++
++let cli = {
++  bin: '/dev/null',
++  loadConfig: deprecated,
++  run: deprecated,
++};
++
++const isNpxRuntime = process.env.npm_lifecycle_event === 'npx';
++const isInitCommand = process.argv[2] === 'init';
++const DEFAULT_REGISTRY_HOST =
++  process.env.npm_config_registry ?? 'https://registry.npmjs.org/';
++const HEAD = '1000.0.0';
++
++// We're going to deprecate the `init` command proxying requests to @react-native-community/cli transparently
++// on December 31th, 2024 or 0.76 (whichever arrives first). This is part of work to decouple of community CLI from React Native core.
++//
++// See https://github.com/react-native-community/discussions-and-proposals/blob/main/proposals/0759-react-native-frameworks.md
++const CLI_DEPRECATION_DATE = new Date('2024-12-31');
++
++async function getLatestVersion(registryHost = DEFAULT_REGISTRY_HOST) {
++  return new Promise((res, rej) => {
++    const url = new URL(registryHost);
++    url.pathname = 'react-native/latest';
++    get(url.toString(), resp => {
++      const buffer = [];
++      resp.on('data', data => buffer.push(data));
++      resp.on('end', () => {
++        try {
++          res(JSON.parse(Buffer.concat(buffer).toString('utf8')).version);
++        } catch (e) {
++          rej(e);
++        }
++      });
++    }).on('error', e => rej(e));
++  });
++}
++
++/**
++ * Warn when users are using `npx react-native init`, to raise awareness of the changes from RFC 0759.
++ *
++ * Phase 1
++ *
++ * @see https://github.com/react-native-community/discussions-and-proposals/tree/main/proposals/0759-react-native-frameworks.md
++ */
++function warnWhenRunningInit() {
++  if (isInitCommand) {
++    console.warn(
++      `\nRunning: ${chalk.grey.bold('npx @react-native-community/cli init')}\n`,
++    );
++  }
++}
++
++/**
++ * Warn more sternly that the ability to call `npx react-native init` is going away.
++ *
++ * Phase 2
++ *
++ * @see https://github.com/react-native-community/discussions-and-proposals/tree/main/proposals/0759-react-native-frameworks.md
++ */
++function warnWithDeprecationSchedule() {
++  if (!isInitCommand) {
++    return;
++  }
++
++  const daysRemaining = Math.ceil(
++    (CLI_DEPRECATION_DATE.getTime() - new Date().getTime()) / 86_400_000,
++  );
++
++  const emphasis =
++    daysRemaining < 10
++      ? chalk.bgRed.white.bold
++      : daysRemaining < 30
++        ? chalk.red.bold
++        : daysRemaining < 60
++          ? chalk.green.bold
++          : chalk.blueBright.bold;
++
++  console.warn(`
++${chalk.yellow('⚠️')} The \`init\` command is deprecated.
++The behavior will be changed on ${chalk.white.bold(CLI_DEPRECATION_DATE.toLocaleDateString())} ${emphasis(`(${daysRemaining} day${daysRemaining > 1 ? 's' : ''})`)}.
++
++- Switch to ${chalk.grey.bold('npx @react-native-community/cli init')} for the identical behavior.
++- Refer to the documentation for information about alternative tools: ${chalk.dim('https://reactnative.dev/docs/getting-started')}`);
++}
++
++function warnWithDeprecated() {
++  if (!isInitCommand) {
++    return;
++  }
++  console.warn(`
++🚨️ The \`init\` command is deprecated.
++
++- Switch to ${chalk.grey.bold('npx @react-native-community/cli init')} for the identical behavior.
++- Refer to the documentation for information about alternative tools: ${chalk.dim('https://reactnative.dev/docs/getting-started')}`);
++}
++
++function warnWithExplicitDependency(version = '*') {
++  console.warn(`
++${chalk.yellow('⚠')}️ ${chalk.dim('react-native')} depends on ${chalk.dim('@react-native-community/cli')} for cli commands. To fix update your ${chalk.dim('package.json')} to include:
++
++${chalk.white.bold(`
++  "devDependencies": {
++    "@react-native-community/cli": "latest",
++  }
++`)}
++
++`);
++}
++
++/**
++ * npx react-native -> @react-native-community/cli
++ *
++ * Will perform a version check and warning if you're not running the latest community cli when executed using npx. If
++ * you know what you're doing, you can skip this check:
++ *
++ *  SKIP=true npx react-native ...
++ *
++ */
++async function main() {
++  if (
++    isNpxRuntime &&
++    !process.env.SKIP &&
++    currentVersion !== HEAD &&
++    isInitCommand
++  ) {
++    try {
++      const latest = await getLatestVersion();
++      // TODO: T184416093 When cli is deprecated, remove semver from package.json
++      if (semver.lt(currentVersion, latest)) {
++        const msg = `
++  ${chalk.bold.yellow('WARNING:')} You should run ${chalk.white.bold(
++    'npx react-native@latest',
++  )} to ensure you're always using the most current version of the CLI. NPX has cached version (${chalk.bold.yellow(
++    currentVersion,
++  )}) != current release (${chalk.bold.green(latest)})
++  `;
++        console.warn(msg);
++      }
++    } catch (_) {
++      // Ignore errors, since it's a nice to have warning
++    }
++  }
++
++  const isDeprecated =
++    CLI_DEPRECATION_DATE.getTime() <= new Date().getTime() ||
++    currentVersion.startsWith('0.77');
++
++  /**
++   * This command is now deprecated. We will continue to proxy commands to @react-native-community/cli, but it
++   * isn't supported anymore. We'll always show the warning.
++   *
++   * WARNING: Projects will have to have an explicit dependency on @react-native-community/cli to use the CLI.
++   *
++   * Phase 3
++   *
++   * @see https://github.com/react-native-community/discussions-and-proposals/tree/main/proposals/0759-react-native-frameworks.md
++   */
++  if (isInitCommand) {
++    if (currentVersion !== HEAD && isDeprecated) {
++      warnWithDeprecated();
++      // We only exit if the user calls `init` and it's deprecated. All other cases should proxy to to @react-native-community/cli.
++      // Be careful with this as it can break a lot of users.
++      console.warn(`${chalk.green('Exiting...')}`);
++      process.exit(1);
++    } else if (
++      currentVersion.startsWith('0.75') ||
++      currentVersion.startsWith('0.76')
++    ) {
++      // We check deprecation schedule only for 0.75 and 0.76 and 0.77 is expected to land in Jan 2025.
++      warnWithDeprecationSchedule();
++    }
++    warnWhenRunningInit();
++
++    const proc = spawn(
++      'npx',
++      ['@react-native-community/cli', ...process.argv.slice(2)],
++      {
++        stdio: 'inherit',
++      },
++    );
++
++    const code = await new Promise(resolve => {
++      proc.on('exit', resolve);
++    });
++    process.exit(code);
++  }
++
++  try {
++    return findCommunityCli().run(name);
++  } catch (e) {
++    if (isMissingCliDependency(e)) {
++      warnWithExplicitDependency();
++      process.exit(1);
++    }
++    throw e;
++  }
++}
++
++if (require.main === module) {
++  main();
++} else {
++  try {
++    cli = findCommunityCli();
++  } catch (e) {
++    // We silence @react-native-community/cli missing as it is no
++    // longer a dependency
++    if (!isMissingCliDependency(e)) {
++      throw e;
++    }
++  }
++}
++
++module.exports = cli;
+diff --git a/node_modules/react-native/gradle 2.properties b/node_modules/react-native/gradle 2.properties
+new file mode 100644
+index 0000000..2d8d1e4
+--- /dev/null
++++ b/node_modules/react-native/gradle 2.properties	
+@@ -0,0 +1 @@
++android.useAndroidX=true
+\ No newline at end of file
+diff --git a/node_modules/react-native/index 2.js b/node_modules/react-native/index 2.js
+new file mode 100644
+index 0000000..edca23f
+--- /dev/null
++++ b/node_modules/react-native/index 2.js	
+@@ -0,0 +1,399 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ * @flow strict-local
++ */
++
++// flowlint unsafe-getters-setters:off
++/* eslint-disable lint/no-commonjs-exports */
++
++'use strict';
++'use client';
++
++// ----------------------------------------------------------------------------
++// Runtime entry point for react-native.
++//
++// This module is separate from index.js.flow as it provides a more lenient
++// `module.exports` API at runtime, for lazy module loading and backwards
++// compatibility.
++//
++// IMPORTANT: Keep this file in sync with index.js.flow. Test your changes
++// whenever updating React Native's public API.
++// ----------------------------------------------------------------------------
++
++import typeof * as ReactNativePublicAPI from './index.js.flow';
++
++const warnOnce = require('./Libraries/Utilities/warnOnce').default;
++const invariant = require('invariant');
++
++module.exports = {
++  // #region Components
++  get ActivityIndicator() {
++    return require('./Libraries/Components/ActivityIndicator/ActivityIndicator')
++      .default;
++  },
++  get Button() {
++    return require('./Libraries/Components/Button').default;
++  },
++  get DrawerLayoutAndroid() {
++    return require('./Libraries/Components/DrawerAndroid/DrawerLayoutAndroid')
++      .default;
++  },
++  get FlatList() {
++    return require('./Libraries/Lists/FlatList').default;
++  },
++  get Image() {
++    return require('./Libraries/Image/Image').default;
++  },
++  get ImageBackground() {
++    return require('./Libraries/Image/ImageBackground').default;
++  },
++  get InputAccessoryView() {
++    return require('./Libraries/Components/TextInput/InputAccessoryView')
++      .default;
++  },
++  get KeyboardAvoidingView() {
++    return require('./Libraries/Components/Keyboard/KeyboardAvoidingView')
++      .default;
++  },
++  get experimental_LayoutConformance() {
++    return require('./Libraries/Components/LayoutConformance/LayoutConformance')
++      .default;
++  },
++  get Modal() {
++    return require('./Libraries/Modal/Modal').default;
++  },
++  get Pressable() {
++    return require('./Libraries/Components/Pressable/Pressable').default;
++  },
++  get ProgressBarAndroid() {
++    warnOnce(
++      'progress-bar-android-moved',
++      'ProgressBarAndroid has been extracted from react-native core and will be removed in a future release. ' +
++        "It can now be installed and imported from '@react-native-community/progress-bar-android' instead of 'react-native'. " +
++        'See https://github.com/react-native-progress-view/progress-bar-android',
++    );
++    return require('./Libraries/Components/ProgressBarAndroid/ProgressBarAndroid')
++      .default;
++  },
++  get RefreshControl() {
++    return require('./Libraries/Components/RefreshControl/RefreshControl')
++      .default;
++  },
++  get SafeAreaView() {
++    return require('./Libraries/Components/SafeAreaView/SafeAreaView').default;
++  },
++  get ScrollView() {
++    return require('./Libraries/Components/ScrollView/ScrollView').default;
++  },
++  get SectionList() {
++    return require('./Libraries/Lists/SectionList').default;
++  },
++  get StatusBar() {
++    return require('./Libraries/Components/StatusBar/StatusBar').default;
++  },
++  get Switch() {
++    return require('./Libraries/Components/Switch/Switch').default;
++  },
++  get Text() {
++    return require('./Libraries/Text/Text').default;
++  },
++  get TextInput() {
++    return require('./Libraries/Components/TextInput/TextInput').default;
++  },
++  get Touchable() {
++    return require('./Libraries/Components/Touchable/Touchable').default;
++  },
++  get TouchableHighlight() {
++    return require('./Libraries/Components/Touchable/TouchableHighlight')
++      .default;
++  },
++  get TouchableNativeFeedback() {
++    return require('./Libraries/Components/Touchable/TouchableNativeFeedback')
++      .default;
++  },
++  get TouchableOpacity() {
++    return require('./Libraries/Components/Touchable/TouchableOpacity').default;
++  },
++  get TouchableWithoutFeedback() {
++    return require('./Libraries/Components/Touchable/TouchableWithoutFeedback')
++      .default;
++  },
++  get View() {
++    return require('./Libraries/Components/View/View').default;
++  },
++  get VirtualizedList() {
++    return require('./Libraries/Lists/VirtualizedList').default;
++  },
++  get VirtualizedSectionList() {
++    return require('./Libraries/Lists/VirtualizedSectionList').default;
++  },
++  // #endregion
++  // #region APIs
++  get AccessibilityInfo() {
++    return require('./Libraries/Components/AccessibilityInfo/AccessibilityInfo')
++      .default;
++  },
++  get ActionSheetIOS() {
++    return require('./Libraries/ActionSheetIOS/ActionSheetIOS').default;
++  },
++  get Alert() {
++    return require('./Libraries/Alert/Alert').default;
++  },
++  // Include any types exported in the Animated module together with its default export, so
++  // you can references types such as Animated.Numeric
++  get Animated() {
++    return require('./Libraries/Animated/Animated').default;
++  },
++  get Appearance() {
++    return require('./Libraries/Utilities/Appearance');
++  },
++  get AppRegistry() {
++    return require('./Libraries/ReactNative/AppRegistry').AppRegistry;
++  },
++  get AppState() {
++    return require('./Libraries/AppState/AppState').default;
++  },
++  get BackHandler() {
++    return require('./Libraries/Utilities/BackHandler').default;
++  },
++  get Clipboard() {
++    warnOnce(
++      'clipboard-moved',
++      'Clipboard has been extracted from react-native core and will be removed in a future release. ' +
++        "It can now be installed and imported from '@react-native-clipboard/clipboard' instead of 'react-native'. " +
++        'See https://github.com/react-native-clipboard/clipboard',
++    );
++    return require('./Libraries/Components/Clipboard/Clipboard').default;
++  },
++  get codegenNativeCommands() {
++    return require('./Libraries/Utilities/codegenNativeCommands').default;
++  },
++  get codegenNativeComponent() {
++    return require('./Libraries/Utilities/codegenNativeComponent').default;
++  },
++  get DeviceEventEmitter() {
++    return require('./Libraries/EventEmitter/RCTDeviceEventEmitter').default;
++  },
++  get DeviceInfo() {
++    return require('./Libraries/Utilities/DeviceInfo').default;
++  },
++  get DevMenu() {
++    return require('./src/private/devsupport/devmenu/DevMenu').default;
++  },
++  get DevSettings() {
++    return require('./Libraries/Utilities/DevSettings').default;
++  },
++  get Dimensions() {
++    return require('./Libraries/Utilities/Dimensions').default;
++  },
++  get DynamicColorIOS() {
++    return require('./Libraries/StyleSheet/PlatformColorValueTypesIOS')
++      .DynamicColorIOS;
++  },
++  get Easing() {
++    return require('./Libraries/Animated/Easing').default;
++  },
++  get findNodeHandle() {
++    return require('./Libraries/ReactNative/RendererProxy').findNodeHandle;
++  },
++  get I18nManager() {
++    return require('./Libraries/ReactNative/I18nManager').default;
++  },
++  /**
++   * @deprecated
++   */
++  get InteractionManager() {
++    return require('./Libraries/Interaction/InteractionManager').default;
++  },
++  get Keyboard() {
++    return require('./Libraries/Components/Keyboard/Keyboard').default;
++  },
++  get LayoutAnimation() {
++    return require('./Libraries/LayoutAnimation/LayoutAnimation').default;
++  },
++  get Linking() {
++    return require('./Libraries/Linking/Linking').default;
++  },
++  get LogBox() {
++    return require('./Libraries/LogBox/LogBox').default;
++  },
++  get NativeAppEventEmitter() {
++    return require('./Libraries/EventEmitter/RCTNativeAppEventEmitter').default;
++  },
++  get NativeDialogManagerAndroid() {
++    return require('./Libraries/NativeModules/specs/NativeDialogManagerAndroid')
++      .default;
++  },
++  get NativeEventEmitter() {
++    return require('./Libraries/EventEmitter/NativeEventEmitter').default;
++  },
++  get NativeModules() {
++    return require('./Libraries/BatchedBridge/NativeModules').default;
++  },
++  get Networking() {
++    return require('./Libraries/Network/RCTNetworking').default;
++  },
++  get PanResponder() {
++    return require('./Libraries/Interaction/PanResponder').default;
++  },
++  get PermissionsAndroid() {
++    return require('./Libraries/PermissionsAndroid/PermissionsAndroid').default;
++  },
++  get PixelRatio() {
++    return require('./Libraries/Utilities/PixelRatio').default;
++  },
++  get Platform() {
++    return require('./Libraries/Utilities/Platform').default;
++  },
++  get PlatformColor() {
++    return require('./Libraries/StyleSheet/PlatformColorValueTypes')
++      .PlatformColor;
++  },
++  get PushNotificationIOS() {
++    warnOnce(
++      'pushNotificationIOS-moved',
++      'PushNotificationIOS has been extracted from react-native core and will be removed in a future release. ' +
++        "It can now be installed and imported from '@react-native-community/push-notification-ios' instead of 'react-native'. " +
++        'See https://github.com/react-native-push-notification/ios',
++    );
++    return require('./Libraries/PushNotificationIOS/PushNotificationIOS')
++      .default;
++  },
++  get processColor() {
++    return require('./Libraries/StyleSheet/processColor').default;
++  },
++  get registerCallableModule() {
++    return require('./Libraries/Core/registerCallableModule').default;
++  },
++  get requireNativeComponent() {
++    return require('./Libraries/ReactNative/requireNativeComponent').default;
++  },
++  get RootTagContext() {
++    return require('./Libraries/ReactNative/RootTag').RootTagContext;
++  },
++  get Settings() {
++    return require('./Libraries/Settings/Settings').default;
++  },
++  get Share() {
++    return require('./Libraries/Share/Share').default;
++  },
++  get StyleSheet() {
++    return require('./Libraries/StyleSheet/StyleSheet').default;
++  },
++  get Systrace() {
++    return require('./Libraries/Performance/Systrace');
++  },
++  get ToastAndroid() {
++    return require('./Libraries/Components/ToastAndroid/ToastAndroid').default;
++  },
++  get TurboModuleRegistry() {
++    return require('./Libraries/TurboModule/TurboModuleRegistry');
++  },
++  get UIManager() {
++    return require('./Libraries/ReactNative/UIManager').default;
++  },
++  get unstable_batchedUpdates() {
++    return require('./Libraries/ReactNative/RendererProxy')
++      .unstable_batchedUpdates;
++  },
++  get useAnimatedValue() {
++    return require('./Libraries/Animated/useAnimatedValue').default;
++  },
++  get useColorScheme() {
++    return require('./Libraries/Utilities/useColorScheme').default;
++  },
++  get useWindowDimensions() {
++    return require('./Libraries/Utilities/useWindowDimensions').default;
++  },
++  get UTFSequence() {
++    return require('./Libraries/UTFSequence').default;
++  },
++  get Vibration() {
++    return require('./Libraries/Vibration/Vibration').default;
++  },
++  // #endregion
++} as ReactNativePublicAPI;
++
++if (__DEV__) {
++  /* $FlowFixMe[prop-missing] This is intentional: Flow will error when
++   * attempting to access AsyncStorage. */
++  /* $FlowFixMe[invalid-export] This is intentional: Flow will error when
++   * attempting to access AsyncStorage. */
++  Object.defineProperty(module.exports, 'AsyncStorage', {
++    configurable: true,
++    get() {
++      invariant(
++        false,
++        'AsyncStorage has been removed from react-native core. ' +
++          "It can now be installed and imported from '@react-native-async-storage/async-storage' instead of 'react-native'. " +
++          'See https://github.com/react-native-async-storage/async-storage',
++      );
++    },
++  });
++  /* $FlowFixMe[prop-missing] This is intentional: Flow will error when
++   * attempting to access ImagePickerIOS. */
++  /* $FlowFixMe[invalid-export] This is intentional: Flow will error when
++   * attempting to access ImagePickerIOS. */
++  Object.defineProperty(module.exports, 'ImagePickerIOS', {
++    configurable: true,
++    get() {
++      invariant(
++        false,
++        'ImagePickerIOS has been removed from React Native. ' +
++          "Please upgrade to use either 'react-native-image-picker' or 'expo-image-picker'. " +
++          "If you cannot upgrade to a different library, please install the deprecated '@react-native-community/image-picker-ios' package. " +
++          'See https://github.com/rnc-archive/react-native-image-picker-ios',
++      );
++    },
++  });
++  /* $FlowFixMe[prop-missing] This is intentional: Flow will error when
++   * attempting to access ProgressViewIOS. */
++  /* $FlowFixMe[invalid-export] This is intentional: Flow will error when
++   * attempting to access ProgressViewIOS. */
++  Object.defineProperty(module.exports, 'ProgressViewIOS', {
++    configurable: true,
++    get() {
++      invariant(
++        false,
++        'ProgressViewIOS has been removed from react-native core. ' +
++          "It can now be installed and imported from '@react-native-community/progress-view' instead of 'react-native'. " +
++          'See https://github.com/react-native-progress-view/progress-view',
++      );
++    },
++  });
++  /* $FlowFixMe[prop-missing] This is intentional: Flow will error when
++   * attempting to access DatePickerIOS. */
++  /* $FlowFixMe[invalid-export] This is intentional: Flow will error when
++   * attempting to access DatePickerIOS. */
++  Object.defineProperty(module.exports, 'DatePickerIOS', {
++    configurable: true,
++    get() {
++      invariant(
++        false,
++        'DatePickerIOS has been removed from react-native core. ' +
++          "It can now be installed and imported from '@react-native-community/datetimepicker' instead of 'react-native'. " +
++          'See https://github.com/react-native-datetimepicker/datetimepicker',
++      );
++    },
++  });
++  /* $FlowFixMe[prop-missing] This is intentional: Flow will error when
++   * attempting to access Slider. */
++  /* $FlowFixMe[invalid-export] This is intentional: Flow will error when
++   * attempting to access Slider. */
++  Object.defineProperty(module.exports, 'Slider', {
++    configurable: true,
++    get() {
++      invariant(
++        false,
++        'Slider has been removed from react-native core. ' +
++          "It can now be installed and imported from '@react-native-community/slider' instead of 'react-native'. " +
++          'See https://github.com/callstack/react-native-slider',
++      );
++    },
++  });
++}
+diff --git a/node_modules/react-native/interface 2.js b/node_modules/react-native/interface 2.js
+new file mode 100644
+index 0000000..38ae9c6
+--- /dev/null
++++ b/node_modules/react-native/interface 2.js	
+@@ -0,0 +1,21 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ * @flow strict
++ */
++
++'use strict';
++
++// NOTE: Hmm... I don't think declaring variables within this module actually
++// accomplishes anything besides documenting that these globals are expected to
++// exist. So I think the correct "fix" to this lint warning is to delete this
++// entire file. But in lieu of doing that... no harm for now in keeping this
++// file around, even if it is only for documentation purposes. ¯\_(ツ)_/¯
++
++/* eslint-disable no-unused-vars */
++
++declare var __DEV__: boolean;
+diff --git a/node_modules/react-native/jest-preset 2.js b/node_modules/react-native/jest-preset 2.js
+new file mode 100644
+index 0000000..c0de4bd
+--- /dev/null
++++ b/node_modules/react-native/jest-preset 2.js	
+@@ -0,0 +1,29 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ */
++
++'use strict';
++
++module.exports = {
++  haste: {
++    defaultPlatform: 'ios',
++    platforms: ['android', 'ios', 'native'],
++  },
++  resolver: require.resolve('./jest/resolver.js'),
++  transform: {
++    '^.+\\.(js|ts|tsx)$': 'babel-jest',
++    '^.+\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
++      './jest/assetFileTransformer.js',
++    ),
++  },
++  transformIgnorePatterns: [
++    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)/)',
++  ],
++  setupFiles: [require.resolve('./jest/setup.js')],
++  testEnvironment: require.resolve('./jest/react-native-env.js'),
++};
+diff --git a/node_modules/react-native/package 2.json b/node_modules/react-native/package 2.json
+new file mode 100644
+index 0000000..81c66c0
+--- /dev/null
++++ b/node_modules/react-native/package 2.json	
+@@ -0,0 +1,236 @@
++{
++  "name": "react-native",
++  "version": "0.80.0",
++  "description": "A framework for building native apps using React",
++  "license": "MIT",
++  "repository": {
++    "type": "git",
++    "url": "git+https://github.com/facebook/react-native.git",
++    "directory": "packages/react-native"
++  },
++  "homepage": "https://reactnative.dev/",
++  "keywords": [
++    "react",
++    "react-native",
++    "android",
++    "ios",
++    "mobile",
++    "cross-platform",
++    "app-framework",
++    "mobile-development"
++  ],
++  "bugs": "https://github.com/facebook/react-native/issues",
++  "engines": {
++    "node": ">=18"
++  },
++  "bin": {
++    "react-native": "cli.js"
++  },
++  "main": "./index.js",
++  "types": "types",
++  "exports": {
++    ".": {
++      "react-native-strict-api": "./types_generated/index.d.ts",
++      "react-native-strict-api-UNSAFE-ALLOW-SUBPATHS": "./types_generated/index.d.ts",
++      "types": "./types/index.d.ts",
++      "default": "./index.js"
++    },
++    "./*": {
++      "react-native-strict-api": null,
++      "react-native-strict-api-UNSAFE-ALLOW-SUBPATHS": "./types_generated/*.d.ts",
++      "types": "./*.d.ts",
++      "default": "./*.js"
++    },
++    "./*.js": {
++      "react-native-strict-api": null,
++      "default": "./*.js"
++    },
++    "./Libraries/*.d.ts": {
++      "react-native-strict-api": null,
++      "default": "./Libraries/*.d.ts"
++    },
++    "./scripts/*": "./scripts/*",
++    "./src/*": {
++      "react-native-strict-api": null,
++      "react-native-strict-api-UNSAFE-ALLOW-SUBPATHS": "./types_generated/src/*.d.ts",
++      "default": "./src/*.js"
++    },
++    "./types/*.d.ts": {
++      "react-native-strict-api": null,
++      "default": "./types/*.d.ts"
++    },
++    "./gradle/*": null,
++    "./React/*": null,
++    "./ReactAndroid/*": null,
++    "./ReactApple/*": null,
++    "./ReactCommon/*": null,
++    "./sdks/*": null,
++    "./src/fb_internal/*": "./src/fb_internal/*",
++    "./third-party-podspecs/*": null,
++    "./types/*": null,
++    "./types_generated/*": null,
++    "./package.json": "./package.json"
++  },
++  "jest-junit": {
++    "outputDirectory": "reports/junit",
++    "outputName": "js-test-results.xml"
++  },
++  "files": [
++    "build.gradle.kts",
++    "cli.js",
++    "flow",
++    "gradle.properties",
++    "gradle/libs.versions.toml",
++    "index.js",
++    "interface.js",
++    "jest-preset.js",
++    "jest",
++    "Libraries",
++    "LICENSE",
++    "React-Core.podspec",
++    "react-native.config.js",
++    "React.podspec",
++    "React",
++    "!React/Fabric/RCTThirdPartyFabricComponentsProvider.*",
++    "ReactAndroid",
++    "!ReactAndroid/.cxx",
++    "!ReactAndroid/build",
++    "!ReactAndroid/external-artifacts/artifacts",
++    "!ReactAndroid/external-artifacts/build",
++    "!ReactAndroid/hermes-engine/.cxx",
++    "!ReactAndroid/hermes-engine/build",
++    "!ReactAndroid/src/main/third-party",
++    "!ReactAndroid/src/test",
++    "ReactApple",
++    "ReactCommon",
++    "README.md",
++    "rn-get-polyfills.js",
++    "scripts/bundle.js",
++    "scripts/cocoapods",
++    "scripts/codegen",
++    "scripts/compose-source-maps.js",
++    "scripts/find-node-for-xcode.sh",
++    "scripts/generate-codegen-artifacts.js",
++    "scripts/generate-provider-cli.js",
++    "scripts/generate-specs-cli.js",
++    "scripts/hermes/hermes-utils.js",
++    "scripts/hermes/prepare-hermes-for-build.js",
++    "scripts/ios-configure-glog.sh",
++    "scripts/native_modules.rb",
++    "scripts/node-binary.sh",
++    "scripts/packager-reporter.js",
++    "scripts/packager.sh",
++    "scripts/react_native_pods_utils/script_phases.rb",
++    "scripts/react_native_pods_utils/script_phases.sh",
++    "scripts/react_native_pods.rb",
++    "scripts/react-native-xcode.sh",
++    "scripts/xcode/ccache-clang.sh",
++    "scripts/xcode/ccache-clang++.sh",
++    "scripts/xcode/ccache.conf",
++    "scripts/xcode/with-environment.sh",
++    "sdks/.hermesversion",
++    "sdks/hermes-engine",
++    "sdks/hermesc",
++    "settings.gradle.kts",
++    "src",
++    "!src/private/testing",
++    "third-party-podspecs",
++    "types",
++    "types_generated",
++    "!**/__docs__/**",
++    "!**/__fixtures__/**",
++    "!**/__flowtests__/**",
++    "!**/__mocks__/**",
++    "!**/__tests__/**",
++    "!**/__typetests__/**"
++  ],
++  "scripts": {
++    "prepack": "node ./scripts/prepack.js",
++    "featureflags": "node ./scripts/featureflags/index.js"
++  },
++  "peerDependencies": {
++    "@types/react": "^19.1.0",
++    "react": "^19.1.0"
++  },
++  "peerDependenciesMeta": {
++    "@types/react": {
++      "optional": true
++    }
++  },
++  "dependencies": {
++    "@jest/create-cache-key-function": "^29.7.0",
++    "@react-native/assets-registry": "0.80.0",
++    "@react-native/codegen": "0.80.0",
++    "@react-native/community-cli-plugin": "0.80.0",
++    "@react-native/gradle-plugin": "0.80.0",
++    "@react-native/js-polyfills": "0.80.0",
++    "@react-native/normalize-colors": "0.80.0",
++    "@react-native/virtualized-lists": "0.80.0",
++    "abort-controller": "^3.0.0",
++    "anser": "^1.4.9",
++    "ansi-regex": "^5.0.0",
++    "babel-jest": "^29.7.0",
++    "babel-plugin-syntax-hermes-parser": "0.28.1",
++    "base64-js": "^1.5.1",
++    "chalk": "^4.0.0",
++    "commander": "^12.0.0",
++    "flow-enums-runtime": "^0.0.6",
++    "glob": "^7.1.1",
++    "invariant": "^2.2.4",
++    "jest-environment-node": "^29.7.0",
++    "memoize-one": "^5.0.0",
++    "metro-runtime": "^0.82.2",
++    "metro-source-map": "^0.82.2",
++    "nullthrows": "^1.1.1",
++    "pretty-format": "^29.7.0",
++    "promise": "^8.3.0",
++    "react-devtools-core": "^6.1.1",
++    "react-refresh": "^0.14.0",
++    "regenerator-runtime": "^0.13.2",
++    "scheduler": "0.26.0",
++    "semver": "^7.1.3",
++    "stacktrace-parser": "^0.1.10",
++    "whatwg-fetch": "^3.0.0",
++    "ws": "^6.2.3",
++    "yargs": "^17.6.2"
++  },
++  "codegenConfig": {
++    "libraries": [
++      {
++        "name": "FBReactNativeSpec",
++        "type": "modules",
++        "ios": {
++          "modules": {
++            "AccessibilityManager": {
++              "unstableRequiresMainQueueSetup": true
++            },
++            "Appearance": {
++              "unstableRequiresMainQueueSetup": true
++            },
++            "AppState": {
++              "unstableRequiresMainQueueSetup": true
++            },
++            "DeviceInfo": {
++              "unstableRequiresMainQueueSetup": true
++            },
++            "PlatformConstants": {
++              "unstableRequiresMainQueueSetup": true
++            },
++            "StatusBarManager": {
++              "unstableRequiresMainQueueSetup": true
++            }
++          }
++        },
++        "android": {},
++        "jsSrcsDir": "src"
++      },
++      {
++        "name": "rncore",
++        "type": "components",
++        "ios": {},
++        "android": {},
++        "jsSrcsDir": "src"
++      }
++    ]
++  }
++}
+diff --git a/node_modules/react-native/react-native.config 2.js b/node_modules/react-native/react-native.config 2.js
+new file mode 100644
+index 0000000..9d2e338
+--- /dev/null
++++ b/node_modules/react-native/react-native.config 2.js	
+@@ -0,0 +1,126 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @format
++ */
++
++'use strict';
++
++// React Native shouldn't be exporting itself like this, the Community Template should be be directly
++// depending on and injecting:
++// - @react-native-community/cli-platform-android
++// - @react-native-community/cli-platform-ios
++// - @react-native/community-cli-plugin (via the @react-native/core-cli-utils package)
++// - codegen command should be inhoused into @react-native-community/cli
++//
++// This is a temporary workaround.
++
++const verbose = process.env.DEBUG && process.env.DEBUG.includes('react-native');
++
++function findCommunityPlatformPackage(spec, startDir = process.cwd()) {
++  // In monorepos, we cannot make any assumptions on where
++  // `@react-native-community/*` gets installed. The safest way to find it
++  // (barring adding an optional peer dependency) is to start from the project
++  // root.
++  //
++  // Note that we're assuming that the current working directory is the project
++  // root. This is also what `@react-native-community/cli` assumes (see
++  // https://github.com/react-native-community/cli/blob/14.x/packages/cli-tools/src/findProjectRoot.ts).
++  const main = require.resolve(spec, {paths: [startDir]});
++  return require(main);
++}
++
++let android;
++try {
++  android = findCommunityPlatformPackage(
++    '@react-native-community/cli-platform-android',
++  );
++} catch {
++  if (verbose) {
++    console.warn(
++      '@react-native-community/cli-platform-android not found, the react-native.config.js may be unusable.',
++    );
++  }
++}
++
++let ios;
++try {
++  ios = findCommunityPlatformPackage(
++    '@react-native-community/cli-platform-ios',
++  );
++} catch {
++  if (verbose) {
++    console.warn(
++      '@react-native-community/cli-platform-ios not found, the react-native.config.js may be unusable.',
++    );
++  }
++}
++
++const commands = [];
++
++const {
++  bundleCommand,
++  startCommand,
++} = require('@react-native/community-cli-plugin');
++commands.push(bundleCommand, startCommand);
++
++const codegenCommand = {
++  name: 'codegen',
++  options: [
++    {
++      name: '--path <path>',
++      description: 'Path to the React Native project root.',
++      default: process.cwd(),
++    },
++    {
++      name: '--platform <string>',
++      description:
++        'Target platform. Supported values: "android", "ios", "all".',
++      default: 'all',
++    },
++    {
++      name: '--outputPath <path>',
++      description: 'Path where generated artifacts will be output to.',
++    },
++    {
++      name: '--source <string>',
++      description: 'Whether the script is invoked from an `app` or a `library`',
++      default: 'app',
++    },
++  ],
++  func: (argv, config, args) =>
++    require('./scripts/codegen/generate-artifacts-executor').execute(
++      args.path,
++      args.platform,
++      args.outputPath,
++      args.source,
++    ),
++};
++
++commands.push(codegenCommand);
++
++const config = {
++  commands,
++  platforms: {},
++};
++
++if (ios != null) {
++  config.commands.push(...ios.commands);
++  config.platforms.ios = {
++    projectConfig: ios.projectConfig,
++    dependencyConfig: ios.dependencyConfig,
++  };
++}
++
++if (android != null) {
++  config.commands.push(...android.commands);
++  config.platforms.android = {
++    projectConfig: android.projectConfig,
++    dependencyConfig: android.dependencyConfig,
++  };
++}
++
++module.exports = config;
+diff --git a/node_modules/react-native/rn-get-polyfills 2.js b/node_modules/react-native/rn-get-polyfills 2.js
+new file mode 100644
+index 0000000..bf0d042
+--- /dev/null
++++ b/node_modules/react-native/rn-get-polyfills 2.js	
+@@ -0,0 +1,13 @@
++/**
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ *
++ * @flow strict-local
++ * @format
++ */
++
++'use strict';
++
++module.exports = require('@react-native/js-polyfills');
+diff --git a/node_modules/react-native/sdks/hermes-engine/utils/build-hermes-xcode.sh b/node_modules/react-native/sdks/hermes-engine/utils/build-hermes-xcode.sh
+index b1ac920..c9d1db7 100755
+--- a/node_modules/react-native/sdks/hermes-engine/utils/build-hermes-xcode.sh
++++ b/node_modules/react-native/sdks/hermes-engine/utils/build-hermes-xcode.sh
+@@ -99,3 +99,13 @@ platform_copy_destination=$(get_platform_copy_destination $PLATFORM_NAME)
+ cp -pfR \
+   "${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}/API/hermes/hermes.framework" \
+   "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}"
++
++# Ensure MinimumOSVersion is set in hermes.framework Info.plist
++PLIST="${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}/hermes.framework/Info.plist"
++if [ -f "$PLIST" ]; then
++  /usr/libexec/PlistBuddy -c "Set :MinimumOSVersion ${deployment_target}" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :MinimumOSVersion string ${deployment_target}" "$PLIST"
++fi
++
++# Generate dSYM for hermes.framework explicitly
++echo "Generate dSYM for hermes.framework"
++dsymutil "${PODS_ROOT}/hermes-engine/build/${PLATFORM_NAME}/API/hermes/hermes.framework/hermes" -o "${PODS_ROOT}/hermes-engine/destroot/Library/Frameworks/${platform_copy_destination}/hermes.framework.dSYM" || true
+diff --git a/node_modules/react-native/sdks/hermes-engine/utils/build-hermesc-xcode.sh b/node_modules/react-native/sdks/hermes-engine/utils/build-hermesc-xcode.sh
+index 132ee54..a8b178c 100755
+--- a/node_modules/react-native/sdks/hermes-engine/utils/build-hermesc-xcode.sh
++++ b/node_modules/react-native/sdks/hermes-engine/utils/build-hermesc-xcode.sh
+@@ -14,5 +14,7 @@ jsi_path="$1"
+ # We want to make sure that hermesc is built for mac.
+ # So we clean the environment with env -i, and explicitly set SDKROOT to macosx
+ SDKROOT=$(xcode-select -p)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk
+-env -i SDKROOT="$SDKROOT" "$CMAKE_BINARY" -S "${PODS_ROOT}/hermes-engine" -B "$hermesc_dir_path" -DJSI_DIR="$jsi_path"
+-env -i SDKROOT="$SDKROOT" "$CMAKE_BINARY" --build "$hermesc_dir_path" --target hermesc -j "$(sysctl -n hw.ncpu)"
++# Provide a minimal PATH so CMake can find make/clang when using "env -i"
++PATH_SETUP="/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/opt/homebrew/opt/make/libexec/gnubin"
++env -i PATH="$PATH_SETUP" SDKROOT="$SDKROOT" "$CMAKE_BINARY" -G "Unix Makefiles" -S "${PODS_ROOT}/hermes-engine" -B "$hermesc_dir_path" -DJSI_DIR="$jsi_path"
++env -i PATH="$PATH_SETUP" SDKROOT="$SDKROOT" "$CMAKE_BINARY" --build "$hermesc_dir_path" --target hermesc -j "$(sysctl -n hw.ncpu)"
+diff --git a/node_modules/react-native/settings.gradle 2.kts b/node_modules/react-native/settings.gradle 2.kts
+new file mode 100644
+index 0000000..283d16b
+--- /dev/null
++++ b/node_modules/react-native/settings.gradle 2.kts	
+@@ -0,0 +1,31 @@
++/*
++ * Copyright (c) Meta Platforms, Inc. and affiliates.
++ *
++ * This source code is licensed under the MIT license found in the
++ * LICENSE file in the root directory of this source tree.
++ */
++
++// This is the settings.gradle.kts file used when the users
++// is doing a build from source. It's triggered as the user
++// will add an `includeBuild(../node_modules/react-native)` in
++// their settings.gradle.kts file.
++// More on this here: https://reactnative.dev/contributing/how-to-build-from-source
++
++pluginManagement {
++  repositories {
++    mavenCentral()
++    google()
++    gradlePluginPortal()
++  }
++}
++
++rootProject.name = "react-native-build-from-source"
++
++include(":packages:react-native:ReactAndroid")
++
++project(":packages:react-native:ReactAndroid").projectDir = file("ReactAndroid/")
++
++include(":packages:react-native:ReactAndroid:hermes-engine")
++
++project(":packages:react-native:ReactAndroid:hermes-engine").projectDir =
++    file("ReactAndroid/hermes-engine/")

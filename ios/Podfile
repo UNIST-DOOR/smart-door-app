@@ -8,7 +8,12 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, min_ios_version_supported
 # New Architecture 비활성화 (콜백 브리지 호환성 목적)
 ENV['RCT_NEW_ARCH_ENABLED'] = '0'
-ENV['USE_FRAMEWORKS'] = 'dynamic'
+ENV['USE_FRAMEWORKS'] = 'static'
+# Hermes iOS에서 동적 Framework 사용 비활성화(정적 링크 강제)
+ENV['HERMES_ENABLE_FRAMEWORKS'] = '0'
+# React Native 공식 플래그: Hermes를 프리빌트가 아닌 "소스 빌드"로 강제
+# https://github.com/facebook/react-native/blob/main/packages/react-native/sdks/hermes-engine/hermes-utils.rb
+ENV['RCT_BUILD_HERMES_FROM_SOURCE'] = 'true'
 prepare_react_native_project!
 
 linkage = ENV['USE_FRAMEWORKS']
@@ -28,7 +33,8 @@ target 'SmartDoorManager' do
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
+    :app_path => "#{Pod::Config.instance.installation_root}/..",
+    :hermes_enabled => true
   )
 
   post_install do |installer|
@@ -39,5 +45,16 @@ target 'SmartDoorManager' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # Ensure dSYM is generated for Release (fix App Store Connect dSYM check)
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if config.name == 'Release'
+          config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
+          config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'NO'
+          config.build_settings['COPY_PHASE_STRIP'] = 'NO'
+        end
+      end
+    end
   end
 end

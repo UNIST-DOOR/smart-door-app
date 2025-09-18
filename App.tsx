@@ -37,8 +37,8 @@ function App() {
     const DEV_DEVICE_URL = 'http://192.168.0.24:8000'; // 실제 디바이스용
     const PROD_BASE_URL = 'https://smartdoor-backend.unist.ac.kr';
     
-    const FORCE_LOCAL = true; // 테스트 : true , 운영 : false
-    const USE_EMULATOR = true; // 에뮬레이터: true, 실제 디바이스: false
+    const FORCE_LOCAL = false; // 테스트 : true , 운영 : false
+    const USE_EMULATOR = false; // 에뮬레이터: true, 실제 디바이스: false
     
     let TARGET_BASE_URL;
     if (FORCE_LOCAL) {
