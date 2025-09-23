@@ -13,6 +13,9 @@
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
 		8576C4932E783A1F008C3E2A /* MSALModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8576C4922E783A1E008C3E2A /* MSALModule.swift */; };
 		8576C4952E783A42008C3E2A /* MSALModuleBridge.m in Sources */ = {isa = PBXBuildFile; fileRef = 8576C4942E783A42008C3E2A /* MSALModuleBridge.m */; };
+		B047F99D2E8169B400D9FA00 /* SecurityChecks.swift in Sources */ = {isa = PBXBuildFile; fileRef = B047F99C2E8169B400D9FA00 /* SecurityChecks.swift */; };
+		B047F99F2E8170A700D9FA00 /* PrivacyShield.swift in Sources */ = {isa = PBXBuildFile; fileRef = B047F99E2E8170A700D9FA00 /* PrivacyShield.swift */; };
+		B047F9A22E817C9500D9FA00 /* JailbreakDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B047F9A12E817C9500D9FA00 /* JailbreakDetector.swift */; };
 		C5511EE9F8E4FB867996C0C0 /* Pods_SmartDoorManager.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E9B3066192A31119ECF1ED9B /* Pods_SmartDoorManager.framework */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +32,9 @@
 		8576C4922E783A1E008C3E2A /* MSALModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MSALModule.swift; path = SmartDoorManager/MSALModule.swift; sourceTree = "<group>"; };
 		8576C4942E783A42008C3E2A /* MSALModuleBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSALModuleBridge.m; path = SmartDoorManager/MSALModuleBridge.m; sourceTree = "<group>"; };
 		85E562822E77CCB100AA1948 /* AppAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AppAuth.h; path = Pods/AppAuth/Sources/AppAuth.h; sourceTree = "<group>"; };
+		B047F99C2E8169B400D9FA00 /* SecurityChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityChecks.swift; sourceTree = "<group>"; };
+		B047F99E2E8170A700D9FA00 /* PrivacyShield.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyShield.swift; sourceTree = "<group>"; };
+		B047F9A12E817C9500D9FA00 /* JailbreakDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JailbreakDetector.swift; sourceTree = "<group>"; };
 		E9B3066192A31119ECF1ED9B /* Pods_SmartDoorManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SmartDoorManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -77,6 +83,9 @@
 		83CBB9F61A601CBA00E9B192 = {
 			isa = PBXGroup;
 			children = (
+				B047F9A12E817C9500D9FA00 /* JailbreakDetector.swift */,
+				B047F99E2E8170A700D9FA00 /* PrivacyShield.swift */,
+				B047F99C2E8169B400D9FA00 /* SecurityChecks.swift */,
 				85610BC22E78F15800F1C361 /* MaterialCommunityIcons.ttf */,
 				8576C4942E783A42008C3E2A /* MSALModuleBridge.m */,
 				8576C4922E783A1E008C3E2A /* MSALModule.swift */,
@@ -122,6 +131,7 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				FB366634E4B735FE437AA7B2 /* [CP] Embed Pods Frameworks */,
 				0BBEEC415ACBC810C9CD7182 /* [CP] Copy Pods Resources */,
+				B047F9A02E8175D900D9FA00 /* Compute JSBundle SHA256 */,
 				B0AD21412E7BC55C00E0D0E8 /* Copy Hermes dSYM */,
 			);
 			buildRules = (
@@ -215,6 +225,25 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-SmartDoorManager/Pods-SmartDoorManager-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
+		B047F9A02E8175D900D9FA00 /* Compute JSBundle SHA256 */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Compute JSBundle SHA256";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nJS=\"${CONFIGURATION_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/main.jsbundle\"\nif [ -f \"$JS\" ]; then\n  HASH=$(shasum -a 256 \"$JS\" | awk '{print tolower($1)}')\n  PLIST=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n  /usr/libexec/PlistBuddy -c \"Delete :JSBundleSHA256\" \"$PLIST\" 2>/dev/null || true\n  /usr/libexec/PlistBuddy -c \"Add :JSBundleSHA256 string $HASH\" \"$PLIST\"\n  echo \"JSBundleSHA256=$HASH\"\nelse\n  echo \"main.jsbundle not found at $JS\"\nfi\n";
+		};
 		B0AD21412E7BC55C00E0D0E8 /* Copy Hermes dSYM */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -284,9 +313,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B047F99F2E8170A700D9FA00 /* PrivacyShield.swift in Sources */,
+				B047F99D2E8169B400D9FA00 /* SecurityChecks.swift in Sources */,
 				8576C4932E783A1F008C3E2A /* MSALModule.swift in Sources */,
 				8576C4952E783A42008C3E2A /* MSALModuleBridge.m in Sources */,
 				761780ED2CA45674006654EE /* AppDelegate.swift in Sources */,
+				B047F9A22E817C9500D9FA00 /* JailbreakDetector.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -302,7 +334,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = HVAVTQL86W;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -505,7 +537,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 12;
+				CURRENT_PROJECT_VERSION = 18;
 				DEVELOPMENT_TEAM = HVAVTQL86W;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",

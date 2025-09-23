@@ -78,5 +78,7 @@
 	<false/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>JSBundleSHA256</key>
+	<string>e5d20b73ce6a9f7fe1c689cfd8d6b9c277a34467c76dd5559748b48c61760834</string>
 </dict>
 </plist>

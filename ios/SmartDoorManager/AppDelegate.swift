@@ -18,6 +18,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // 무결성 검증 (Release에서만 동작)
+    IntegrityChecker.verifyOrTerminateIfNeeded()
+    // 탈옥(JB) 탐지
+    JailbreakDetector.enforceIfDetected()
     NSLog("🚀 AppDelegate: 앱 시작")
     NSLog("🚀 AppDelegate: authorizationFlowManagerDelegate 초기값: \(authorizationFlowManagerDelegate != nil)")
     
@@ -37,6 +41,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
     )
 
     return true
+  }
+
+  func applicationWillResignActive(_ application: UIApplication) {
+    // 홈으로 나가거나 앱 전환 화면 진입 직전: 차폐 시작
+    PrivacyShield.show()
+  }
+
+  func applicationDidBecomeActive(_ application: UIApplication) {
+    // 다시 활성화 시 차폐 해제
+    PrivacyShield.hide()
   }
   
   // Handle OAuth redirects
