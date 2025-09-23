@@ -97,6 +97,8 @@ android {
         manifestPlaceholders = [
             appAuthRedirectScheme: "msauth"
         ]
+        // 무결성 검증: 기본값(빌드타입별에서 덮어씀)
+        buildConfigField "String", "ALLOWED_CERT_SHA256", '""'
     }
     signingConfigs {
         debug {
@@ -123,12 +125,56 @@ android {
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
+            // debug 서명 인증서 SHA-256을 계산하여 BuildConfig에 주입
+            def dbgStoreFile = signingConfigs.debug.storeFile
+            def dbgStorePass = signingConfigs.debug.storePassword
+            def dbgAlias = signingConfigs.debug.keyAlias
+            def dbgKeyPass = signingConfigs.debug.keyPassword
+            def dbgSha256 = ""
+            try {
+                if (dbgStoreFile != null && dbgStoreFile.exists()) {
+                    def ksType = java.security.KeyStore.getDefaultType()
+                    def ks = java.security.KeyStore.getInstance(ksType)
+                    ks.load(new FileInputStream(dbgStoreFile), dbgStorePass?.toCharArray())
+                    def cert = ks.getCertificate(dbgAlias)
+                    if (cert != null) {
+                        def md = java.security.MessageDigest.getInstance("SHA-256")
+                        def digest = md.digest(cert.getEncoded())
+                        dbgSha256 = digest.collect { String.format("%02X", it) }.join(":")
+                    }
+                }
+            } catch (Throwable ignore) {
+                // no-op
+            }
+            buildConfigField "String", "ALLOWED_CERT_SHA256", '"' + dbgSha256 + '"'
         }
         release {
             // 운영: keystore.properties가 존재하면 운영키로 서명
             signingConfig signingConfigs.release
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
+            // release 서명 인증서 SHA-256을 계산하여 BuildConfig에 주입
+            def relStoreFile = signingConfigs.release.storeFile
+            def relStorePass = signingConfigs.release.storePassword
+            def relAlias = signingConfigs.release.keyAlias
+            def relKeyPass = signingConfigs.release.keyPassword
+            def relSha256 = ""
+            try {
+                if (relStoreFile != null && relStoreFile.exists()) {
+                    def ksType = java.security.KeyStore.getDefaultType()
+                    def ks = java.security.KeyStore.getInstance(ksType)
+                    ks.load(new FileInputStream(relStoreFile), relStorePass?.toCharArray())
+                    def cert = ks.getCertificate(relAlias)
+                    if (cert != null) {
+                        def md = java.security.MessageDigest.getInstance("SHA-256")
+                        def digest = md.digest(cert.getEncoded())
+                        relSha256 = digest.collect { String.format("%02X", it) }.join(":")
+                    }
+                }
+            } catch (Throwable ignore) {
+                // no-op
+            }
+            buildConfigField "String", "ALLOWED_CERT_SHA256", '"' + relSha256 + '"'
         }
     }
 }

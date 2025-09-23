@@ -3,8 +3,8 @@
  * 대학교 기숙사 BLE 도어락 제어 앱
  */
 
-import React, { useEffect, useState } from 'react';
-import { StatusBar, StyleSheet, useColorScheme, View, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { StatusBar, StyleSheet, useColorScheme, View, Platform, AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen } from './src/screens/SplashScreen';
 import { AzureLoginScreen } from './src/screens/auth/AzureLoginScreen';
@@ -31,14 +31,16 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [isAutoLoginInProgress, setIsAutoLoginInProgress] = useState(false);
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const lastVerifyRef = useRef<number>(0);
 
   useEffect(() => {
     const DEV_EMULATOR_URL = 'https://smartdoor-backend.unist.ac.kr'; // Android 에뮬레이터용
     const DEV_DEVICE_URL = 'http://192.168.0.24:8000'; // 실제 디바이스용
     const PROD_BASE_URL = 'https://smartdoor-backend.unist.ac.kr';
     
-    const FORCE_LOCAL = false; // 테스트 : true , 운영 : false
-    const USE_EMULATOR = false; // 에뮬레이터: true, 실제 디바이스: false
+    const FORCE_LOCAL = true; // 테스트 : true , 운영 : false
+    const USE_EMULATOR = true; // 에뮬레이터: true, 실제 디바이스: false
     
     let TARGET_BASE_URL;
     if (FORCE_LOCAL) {
@@ -101,9 +103,77 @@ function App() {
     }
   };
 
+  // 포그라운드 복귀 시 세션 재검증 (adb 강제 실행/복귀 우회 방지)
+  const verifySessionOnResume = async () => {
+    // 너무 잦은 호출 방지 (3초 윈도우)
+    const now = Date.now();
+    if (now - lastVerifyRef.current < 3000) return;
+    lastVerifyRef.current = now;
+
+    try {
+      const stored = await AuthService.getStoredTokens();
+      if (!stored?.accessToken) {
+        // 토큰 없으면 즉시 로그아웃 상태로
+        setAuthToken(null);
+        setUserInfo(null);
+        setIsLoggedIn(false);
+        return;
+      }
+      // 토큰 설정 후 서버 확인
+      setAuthToken(stored.accessToken);
+      const unwrap = (res: any) => (res && typeof res === 'object' && 'data' in res ? (res as any).data : res);
+      const [meRes, roomInfoRes] = await Promise.all([
+        apiGet('/api/me/'),
+        apiGet('/api/room-info/'),
+      ]);
+      const me = unwrap(meRes);
+      const roomInfo = unwrap(roomInfoRes);
+      if (!roomInfo?.ok || !roomInfo?.found) {
+        // 권한 확인 실패 시 강제 로그아웃
+        setAuthToken(null);
+        setUserInfo(null);
+        setIsLoggedIn(false);
+        return;
+      }
+      const user: UserInfo = {
+        username: String(roomInfo?.upn || ''),
+        name: String(me?.name || ''),
+        building: String(roomInfo?.building || ''),
+        room: String(roomInfo?.room || ''),
+        bleId: roomInfo?.bleId ? String(roomInfo.bleId) : undefined,
+        checkInDate: roomInfo?.checkInDate ? String(roomInfo.checkInDate) : undefined,
+        checkInTime: roomInfo?.checkInTime ? String(roomInfo.checkInTime) : undefined,
+        checkOutDate: roomInfo?.checkOutDate ? String(roomInfo.checkOutDate) : undefined,
+        checkOutTime: roomInfo?.checkOutTime ? String(roomInfo.checkOutTime) : undefined,
+      };
+      setUserInfo(user);
+      setIsLoggedIn(true);
+    } catch {
+      // 네트워크/검증 실패 시 로그인 화면으로 회귀
+      setAuthToken(null);
+      setUserInfo(null);
+      setIsLoggedIn(false);
+    }
+  };
+
+  // AppState 구독: active 전환 시 세션 재검증
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if ((prev === 'background' || prev === 'inactive') && next === 'active') {
+        verifySessionOnResume();
+      }
+    });
+    return () => {
+      try { sub.remove(); } catch {}
+    };
+  }, []);
+
   const handleSplashFinish = () => {
     setShowSplash(false);
-    // 스플래시 종료 후 자동로그인 시도
+    // 스플래시 종료 후 즉시 세션 검증 + 자동로그인 시도(iOS 무소음 포함)
+    verifySessionOnResume();
     trySilentLogin();
   };
 
