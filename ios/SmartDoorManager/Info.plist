@@ -56,6 +56,8 @@
 	<string>도어락 제어를 위해 블루투스 권한이 필요합니다.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>도어락 제어 및 BLE 스캔을 위해 위치 권한이 필요합니다.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Azure 로그인 2단계 인증을 위해 Face ID를 사용합니다.</string>
 	<key>RCTNewArchEnabled</key>
 	<false/>
 	<key>UIAppFonts</key>

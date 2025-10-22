@@ -32,6 +32,7 @@
 		8576C4922E783A1E008C3E2A /* MSALModule.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = MSALModule.swift; path = SmartDoorManager/MSALModule.swift; sourceTree = "<group>"; };
 		8576C4942E783A42008C3E2A /* MSALModuleBridge.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MSALModuleBridge.m; path = SmartDoorManager/MSALModuleBridge.m; sourceTree = "<group>"; };
 		85E562822E77CCB100AA1948 /* AppAuth.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = AppAuth.h; path = Pods/AppAuth/Sources/AppAuth.h; sourceTree = "<group>"; };
+		B01A91F62EA8A599009E8025 /* SmartDoorManager.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; name = SmartDoorManager.entitlements; path = SmartDoorManager/SmartDoorManager.entitlements; sourceTree = "<group>"; };
 		B047F99C2E8169B400D9FA00 /* SecurityChecks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecurityChecks.swift; sourceTree = "<group>"; };
 		B047F99E2E8170A700D9FA00 /* PrivacyShield.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyShield.swift; sourceTree = "<group>"; };
 		B047F9A12E817C9500D9FA00 /* JailbreakDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JailbreakDetector.swift; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 		13B07FAE1A68108700A75B9A /* SmartDoorManager */ = {
 			isa = PBXGroup;
 			children = (
+				B01A91F62EA8A599009E8025 /* SmartDoorManager.entitlements */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				761780EC2CA45674006654EE /* AppDelegate.swift */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -332,9 +334,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = SmartDoorManager/SmartDoorManager.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = HVAVTQL86W;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -534,10 +537,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = SmartDoorManager/SmartDoorManager.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 18;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = HVAVTQL86W;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
