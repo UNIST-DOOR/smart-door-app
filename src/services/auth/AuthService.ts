@@ -43,14 +43,13 @@ class AuthService {
 					expiresOn: typeof res?.expiresOn === 'number' ? res.expiresOn : undefined,
 					refreshToken: 'msal',
 				};
-				// iOS: accountId를 저장해 silent 시 계정 탐색에 활용
-				try { if ((res as any)?.accountId) { (tokens as any).accountId = (res as any).accountId; } } catch {}
-				try { await AuthStorage.setTokens(tokens as StoredTokens); } catch {}
-				return tokens;
-			} catch (e: any) {
-				console.error('❌[MSAL] 로그인 실패:', e?.message ?? e);
-				throw e;
-			}
+			// iOS: accountId를 저장해 silent 시 계정 탐색에 활용
+			try { if ((res as any)?.accountId) { (tokens as any).accountId = (res as any).accountId; } } catch {}
+			try { await AuthStorage.setTokens(tokens as StoredTokens); } catch {}
+			return tokens;
+		} catch (e: any) {
+			throw e;
+		}
 		}
 
 		const result = await authorize({

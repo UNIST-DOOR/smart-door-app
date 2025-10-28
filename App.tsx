@@ -11,6 +11,7 @@ import { AzureLoginScreen } from './src/screens/auth/AzureLoginScreen';
 import { DoorControlScreen } from './src/screens/control/DoorControlScreen';
 import { apiGet, setAuthToken, setBaseUrl } from './src/lib/api';
 import AuthService from './src/services/auth/AuthService';
+import { checkAndHandleReinstall } from './src/utils/appVersion';
 
 // 사용자 정보 타입 정의
 interface UserInfo {
@@ -60,10 +61,16 @@ function App() {
   const trySilentLogin = async () => {
     try {
       const stored = await AuthService.getStoredTokens();
-      // iOS(MSAL): Keychain 계정 기반이므로 저장 토큰이 없어도 시도
-      // Android: 저장된 refreshToken 없으면 스킵
-      if (Platform.OS !== 'ios' && !stored?.refreshToken) {
-        return;
+      // iOS(MSAL): accountId 필수 (Keychain 계정 매칭용)
+      // Android: refreshToken 필수
+      if (Platform.OS === 'ios') {
+        if (!(stored as any)?.accountId) {
+          return;
+        }
+      } else {
+        if (!stored?.refreshToken) {
+          return;
+        }
       }
 
       // 토큰이 있을 때만 로딩 표시
@@ -170,8 +177,16 @@ function App() {
     };
   }, []);
 
-  const handleSplashFinish = () => {
+  const handleSplashFinish = async () => {
     setShowSplash(false);
+    
+    // 재설치 감지 및 초기화
+    const wasReinstalled = await checkAndHandleReinstall();
+    if (wasReinstalled) {
+      // 재설치된 경우 로그인 화면으로 (자동 로그인 스킵)
+      return;
+    }
+    
     // 스플래시 종료 후 즉시 세션 검증 + 자동로그인 시도(iOS 무소음 포함)
     verifySessionOnResume();
     trySilentLogin();
@@ -182,9 +197,11 @@ function App() {
     setIsLoggedIn(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     // 자동로그인 해제: 저장된 토큰 삭제 + 메모리 토큰 해제
-    try { AuthService.clearStoredTokens(); } catch {}
+    try { 
+      await AuthService.clearStoredTokens(); 
+    } catch {}
     setAuthToken(null);
     setUserInfo(null);
     setIsLoggedIn(false);

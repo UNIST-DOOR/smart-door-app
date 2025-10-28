@@ -280,7 +280,7 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
       '정말 로그아웃 하시겠습니까?',
       [
         { text: '취소', style: 'cancel' },
-        { text: '로그아웃', onPress: onLogout, style: 'destructive' }
+        { text: '로그아웃', onPress: async () => await onLogout(), style: 'destructive' }
       ]
     );
   };

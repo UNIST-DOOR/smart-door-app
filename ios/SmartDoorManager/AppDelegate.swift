@@ -3,6 +3,7 @@ import React
 import React_RCTAppDelegate
 import ReactAppDependencyProvider
 import AppAuth
+import MSAL
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlowManager {
@@ -13,6 +14,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
   
   // Required by RNAppAuthAuthorizationFlowManager protocol
   public weak var authorizationFlowManagerDelegate: RNAppAuthAuthorizationFlowManagerDelegate?
+  
+  // OAuth 인증 진행 중 플래그 (PrivacyShield 비활성화용)
+  private var isAuthenticationInProgress = false
 
   func application(
     _ application: UIApplication,
@@ -22,8 +26,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
     IntegrityChecker.verifyOrTerminateIfNeeded()
     // 탈옥(JB) 탐지
     JailbreakDetector.enforceIfDetected()
-    NSLog("🚀 AppDelegate: 앱 시작")
-    NSLog("🚀 AppDelegate: authorizationFlowManagerDelegate 초기값: \(authorizationFlowManagerDelegate != nil)")
+    
+    // MSAL 인증 시작/종료 알림 구독
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(msalAuthenticationStarted),
+      name: NSNotification.Name("MSALAuthenticationStarted"),
+      object: nil
+    )
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(msalAuthenticationEnded),
+      name: NSNotification.Name("MSALAuthenticationEnded"),
+      object: nil
+    )
     
     let delegate = ReactNativeDelegate()
     let factory = RCTReactNativeFactory(delegate: delegate)
@@ -42,15 +58,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
 
     return true
   }
+  
+  @objc private func msalAuthenticationStarted() {
+    isAuthenticationInProgress = true
+    PrivacyShield.hide()
+  }
+  
+  @objc private func msalAuthenticationEnded() {
+    isAuthenticationInProgress = false
+  }
 
   func applicationWillResignActive(_ application: UIApplication) {
-    // 홈으로 나가거나 앱 전환 화면 진입 직전: 차폐 시작
-    PrivacyShield.show()
+    // OAuth 인증 중에는 PrivacyShield 비활성화 (Face ID 인증 지연 문제 방지)
+    if !isAuthenticationInProgress {
+      PrivacyShield.show()
+    }
   }
 
   func applicationDidBecomeActive(_ application: UIApplication) {
-    // 다시 활성화 시 차폐 해제
-    PrivacyShield.hide()
+    // OAuth 인증 중이 아닐 때만 차폐 해제
+    if !isAuthenticationInProgress {
+      PrivacyShield.hide()
+    }
   }
   
   // Handle OAuth redirects
@@ -59,20 +88,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, RNAppAuthAuthorizationFlo
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey : Any] = [:]
   ) -> Bool {
-    NSLog("🔗 AppDelegate: URL 받음: \(url.absoluteString)")
-    NSLog("🔗 AppDelegate: authorizationFlowManagerDelegate 존재: \(authorizationFlowManagerDelegate != nil)")
-    
-    // React Native로도 메시지 전송
-    DispatchQueue.main.async {
-      NotificationCenter.default.post(name: NSNotification.Name("URLReceived"), object: url.absoluteString)
+    // MSAL Broker 리다이렉트 처리 (msauth 스킴)
+    if url.scheme?.hasPrefix("msauth") == true {
+      return MSALPublicClientApplication.handleMSALResponse(url, sourceApplication: options[.sourceApplication] as? String)
     }
     
+    // RNAppAuth 처리 (Web OAuth)
     if let delegate = authorizationFlowManagerDelegate {
       let handled = delegate.resumeExternalUserAgentFlow(with: url)
-      NSLog("🔗 AppDelegate: OAuth 처리 결과: \(handled)")
       if handled { return true }
     }
-    // Fallback to RN Linking per official guide
+    
+    // Fallback to RN Linking
     return RCTLinkingManager.application(app, open: url, options: options)
   }
   

@@ -70,17 +70,29 @@ extension MSALModule: RCTBridgeModule {
       let webParams = MSALWebviewParameters(authPresentationViewController: topViewController())
       let params = MSALInteractiveTokenParameters(scopes: scopes, webviewParameters: webParams)
       params.promptType = .default
-
+      
+      // OAuth 인증 시작 알림 (PrivacyShield 비활성화)
+      NotificationCenter.default.post(name: NSNotification.Name("MSALAuthenticationStarted"), object: nil)
+      
       DispatchQueue.main.async {
         app.acquireToken(with: params) { [weak self] result, error in
           if let error = error {
             let ns = error as NSError
-            NSLog("[MSAL] interactive error domain=\(ns.domain) code=\(ns.code) userInfo=\(ns.userInfo)")
+            // OAuth 인증 종료 알림 (실패)
+            NotificationCenter.default.post(name: NSNotification.Name("MSALAuthenticationEnded"), object: nil)
             reject("E_MSAL", ns.localizedDescription, ns)
             return
           }
-          guard let result = result else { reject("E_EMPTY", "No result", nil); return }
+          guard let result = result else { 
+            // OAuth 인증 종료 알림 (실패)
+            NotificationCenter.default.post(name: NSNotification.Name("MSALAuthenticationEnded"), object: nil)
+            reject("E_EMPTY", "No result", nil)
+            return 
+          }
           self?.currentAccount = result.account
+          
+          // OAuth 인증 종료 알림 (성공)
+          NotificationCenter.default.post(name: NSNotification.Name("MSALAuthenticationEnded"), object: nil)
           let expiresMs: Any = result.expiresOn != nil ? Int(result.expiresOn!.timeIntervalSince1970 * 1000) : NSNull()
           let response: [String: Any] = [
             "accessToken": result.accessToken as Any,
@@ -93,7 +105,8 @@ extension MSALModule: RCTBridgeModule {
       }
     } catch {
       let ns = error as NSError
-      NSLog("[MSAL] init/interact error domain=\(ns.domain) code=\(ns.code) userInfo=\(ns.userInfo)")
+      // OAuth 인증 종료 알림 (초기화 실패)
+      NotificationCenter.default.post(name: NSNotification.Name("MSALAuthenticationEnded"), object: nil)
       reject("E_INIT", ns.localizedDescription, ns)
     }
   }
@@ -114,18 +127,18 @@ extension MSALModule: RCTBridgeModule {
     do {
       let app = try makeApplication(clientId: clientId, redirectUri: redirectUri, authority: authority)
 
-      // Resolve account
-      if currentAccount == nil {
-        // 1) 특정 accountId가 넘어오면 우선 사용
-        if let accountId = config["accountId"] as? String, let acc = try? app.account(forIdentifier: accountId) {
-          currentAccount = acc
-        }
-      }
-      if currentAccount == nil { currentAccount = try? app.allAccounts().first }
-      guard let account = currentAccount else {
-        reject("E_NOACCOUNT", "No signed in account", nil)
+      // Resolve account - accountId 필수 (자동 로그인 방지)
+      guard let accountId = config["accountId"] as? String else {
+        reject("E_NOACCOUNT", "accountId is required", nil)
         return
       }
+      
+      guard let account = try? app.account(forIdentifier: accountId) else {
+        reject("E_NOACCOUNT", "No account found for accountId", nil)
+        return
+      }
+      
+      currentAccount = account
 
       let authorityURL = URL(string: authority)!
       let msAuthority = try MSALAuthority(url: authorityURL)
@@ -136,7 +149,6 @@ extension MSALModule: RCTBridgeModule {
         app.acquireTokenSilent(with: params) { result, error in
           if let error = error {
             let ns = error as NSError
-            NSLog("[MSAL] silent error domain=\(ns.domain) code=\(ns.code) userInfo=\(ns.userInfo)")
             reject("E_MSAL_SILENT", ns.localizedDescription, ns)
             return
           }
@@ -153,7 +165,6 @@ extension MSALModule: RCTBridgeModule {
       }
     } catch {
       let ns = error as NSError
-      NSLog("[MSAL] init/silent error domain=\(ns.domain) code=\(ns.code) userInfo=\(ns.userInfo)")
       reject("E_INIT", ns.localizedDescription, ns)
     }
   }
