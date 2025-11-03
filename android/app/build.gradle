@@ -91,8 +91,8 @@ android {
         applicationId "com.smartdoormanager"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 2
+        versionName "1.0.1"
         // For react-native-app-auth placeholder
         manifestPlaceholders = [
             appAuthRedirectScheme: "msauth"
@@ -146,7 +146,11 @@ android {
             } catch (Throwable ignore) {
                 // no-op
             }
-            buildConfigField "String", "ALLOWED_CERT_SHA256", '"' + dbgSha256 + '"'
+            // 외부에서 -PAPP_SIGNING_SHA256 로 오버라이드 가능 (Play App Signing 키 지문 등)
+            def overrideSha = project.hasProperty('APP_SIGNING_SHA256') ? (project.property('APP_SIGNING_SHA256') ?: "") : ""
+            def effectiveSha = (overrideSha as String).trim()
+            if (effectiveSha.length() == 0) { effectiveSha = dbgSha256 }
+            buildConfigField "String", "ALLOWED_CERT_SHA256", '"' + effectiveSha + '"'
         }
         release {
             // 운영: keystore.properties가 존재하면 운영키로 서명
@@ -174,7 +178,11 @@ android {
             } catch (Throwable ignore) {
                 // no-op
             }
-            buildConfigField "String", "ALLOWED_CERT_SHA256", '"' + relSha256 + '"'
+            // 외부에서 -PAPP_SIGNING_SHA256 로 오버라이드 가능 (Play App Signing 키 지문 등)
+            def overrideSha = project.hasProperty('APP_SIGNING_SHA256') ? (project.property('APP_SIGNING_SHA256') ?: "") : ""
+            def effectiveSha = (overrideSha as String).trim()
+            if (effectiveSha.length() == 0) { effectiveSha = relSha256 }
+            buildConfigField "String", "ALLOWED_CERT_SHA256", '"' + effectiveSha + '"'
         }
     }
 }
