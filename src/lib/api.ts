@@ -42,6 +42,24 @@ export const apiGet = async (path: string, options?: FetchOptions) => {
   }
 };
 
+export const apiPost = async (path: string, body: any, options?: FetchOptions) => {
+  const url = `${baseUrl}${path.startsWith('/') ? path : `/${path}`}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      ...buildHeaders(options?.headers),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  try {
+    return { ok: res.ok, status: res.status, data: JSON.parse(text) };
+  } catch {
+    return { ok: res.ok, status: res.status, data: text };
+  }
+};
+
 export const getBaseUrl = () => baseUrl;
 
 

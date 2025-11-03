@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert, TouchableOpacity, StatusBar, Image, ActivityIndicator, Vibration, Modal } from 'react-native';
+import { View, Text, ScrollView, Alert, TouchableOpacity, StatusBar, Image, ActivityIndicator, Vibration, Modal, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBLE } from '../../hooks/useBLE';
 import { useDoor } from '../../hooks/useDoor';
 // import { LogViewer } from '../../components/ui/LogViewer'; 디버그
 import { generateDeviceName } from '../../utils/helpers';
+import { apiPost } from '../../lib/api';
 
 import { styles } from './DoorControlScreen.styles';
 
@@ -175,6 +176,12 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
       
       if (success) {
         showAutoAlert('성공', '도어락이 열렸습니다!');
+        
+        // 백엔드에 로그 전송 (비동기, 실패해도 무시)
+        apiPost('/api/door/log/', {
+          platform: Platform.OS,
+          doorType: 'door',
+        }).catch(err => console.warn('[로그] 도어락 로그 전송 실패:', err));
       } else {
         Alert.alert('실패', '도어락 열기에 실패했습니다.\n다시 시도해주세요.');
       }
@@ -235,6 +242,12 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
       
       if (success) {
         showAutoAlert('성공', '공동현관문이 열렸습니다!');
+        
+        // 백엔드에 로그 전송 (비동기, 실패해도 무시)
+        apiPost('/api/door/log/', {
+          platform: Platform.OS,
+          doorType: 'relay',
+        }).catch(err => console.warn('[로그] 공동현관문 로그 전송 실패:', err));
         
         // 공동현관문은 응답값이 없으므로 수동으로 연결해제
         // addLog('🔌 연결 해제 중...', 'info'); // This line was removed as per the new_code, as addLog is not defined.

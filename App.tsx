@@ -36,12 +36,12 @@ function App() {
   const lastVerifyRef = useRef<number>(0);
 
   useEffect(() => {
-    const DEV_EMULATOR_URL = 'https://smartdoor-backend.unist.ac.kr'; // Android 에뮬레이터용
+    const DEV_EMULATOR_URL = 'http://10.0.2.2:8000'; // Android 에뮬레이터용
     const DEV_DEVICE_URL = 'http://192.168.0.24:8000'; // 실제 디바이스용
     const PROD_BASE_URL = 'https://smartdoor-backend.unist.ac.kr';
     
-    const FORCE_LOCAL = true; // 테스트 : true , 운영 : false
-    const USE_EMULATOR = true; // 에뮬레이터: true, 실제 디바이스: false
+    const FORCE_LOCAL = false; // 테스트 : true , 운영 : false
+    const USE_EMULATOR = false; // 에뮬레이터: true, 실제 디바이스: false
     
     let TARGET_BASE_URL;
     if (FORCE_LOCAL) {

@@ -207,14 +207,14 @@ class BleService {
           }
         });
 
-        // 타임아웃 설정 (8초)
+        // 타임아웃 설정 (12초)
         setTimeout(() => {
           if (!found) {
             this.stopScan();
             this.onError?.(`⏰ 기기를 찾을 수 없습니다: ${targetDeviceName}`);
             reject(new Error(`기기를 찾을 수 없습니다: ${targetDeviceName}`));
           }
-        }, 8000);
+        }, 12000);
       });
 
     } catch (error) {

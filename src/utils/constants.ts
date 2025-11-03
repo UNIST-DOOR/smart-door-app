@@ -69,7 +69,7 @@ export const EXTENDED_COMMANDS = [0x1D, 0x1E, 0x1F] as const;
 // 앱 설정
 export const APP_CONFIG = {
   DEVICE_NAME_PREFIX: 'unist',
-  SCAN_TIMEOUT: 9000,
+  SCAN_TIMEOUT: 12000,    // 스캔 타임아웃 12초
   CONNECTION_TIMEOUT: 5000,
   MAX_RETRY_COUNT: 3,
   BYTE_SEND_DELAY: 50,    // 바이트간 전송 지연시간 (ms)
