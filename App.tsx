@@ -112,6 +112,11 @@ function App() {
 
   // 포그라운드 복귀 시 세션 재검증 (adb 강제 실행/복귀 우회 방지)
   const verifySessionOnResume = async () => {
+    // 로그인 상태가 아니면 스킵 (로그아웃 후 자동 로그인 방지)
+    if (!isLoggedIn) {
+      return;
+    }
+
     // 너무 잦은 호출 방지 (3초 윈도우)
     const now = Date.now();
     if (now - lastVerifyRef.current < 3000) return;
