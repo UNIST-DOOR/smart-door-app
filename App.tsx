@@ -3,7 +3,7 @@
  * 대학교 기숙사 BLE 도어락 제어 앱
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { StatusBar, StyleSheet, useColorScheme, View, Platform, AppState, AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SplashScreen } from './src/screens/SplashScreen';
@@ -111,7 +111,7 @@ function App() {
   };
 
   // 포그라운드 복귀 시 세션 재검증 (adb 강제 실행/복귀 우회 방지)
-  const verifySessionOnResume = async () => {
+  const verifySessionOnResume = useCallback(async () => {
     // 로그인 상태가 아니면 스킵 (로그아웃 후 자동 로그인 방지)
     if (!isLoggedIn) {
       return;
@@ -166,7 +166,7 @@ function App() {
       setUserInfo(null);
       setIsLoggedIn(false);
     }
-  };
+  }, [isLoggedIn]);
 
   // AppState 구독: active 전환 시 세션 재검증
   useEffect(() => {
@@ -180,7 +180,7 @@ function App() {
     return () => {
       try { sub.remove(); } catch {}
     };
-  }, []);
+  }, [isLoggedIn, verifySessionOnResume]);
 
   const handleSplashFinish = async () => {
     setShowSplash(false);
