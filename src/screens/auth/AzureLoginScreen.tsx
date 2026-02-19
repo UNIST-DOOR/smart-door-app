@@ -60,19 +60,23 @@ export const AzureLoginScreen: React.FC<Props> = ({ onSuccess, isAutoLoginInProg
 			// 토큰 설정 후 사용자 및 방 정보 조회
 			setAuthToken(result.accessToken ?? null);
 			try {
-				const unwrap = (res: any) => (res && typeof res === 'object' && 'data' in res ? (res as any).data : res);
-				const meRes = await apiGet('/api/me/');
-				const roomInfoRes = await apiGet('/api/room-info/');
-				const me = unwrap(meRes);
-				const roomInfo = unwrap(roomInfoRes);
-				if (!roomInfo?.ok || !roomInfo?.found) {
-					if (roomInfo?.error === 'upgrade_required') {
-						showUpgradeAlert();
-						return;
-					}
-					Alert.alert('권한 없음', '방 정보가 조회되지 않았습니다. 관리자에게 문의하세요.');
+			const unwrap = (res: any) => (res && typeof res === 'object' && 'data' in res ? (res as any).data : res);
+			const meRes = await apiGet('/api/me/');
+			const roomInfoRes = await apiGet('/api/room-info/');
+			const me = unwrap(meRes);
+			const roomInfo = unwrap(roomInfoRes);
+			if (!roomInfo?.ok || !roomInfo?.found) {
+				if (roomInfo?.error === 'upgrade_required') {
+					showUpgradeAlert();
+					// 업그레이드 필요 시에도 토큰 삭제
+					await AuthService.clearStoredTokens();
 					return;
 				}
+				// 방 정보 조회 실패 시 저장된 토큰 삭제
+				Alert.alert('권한 없음', '방 정보가 조회되지 않았습니다. 관리자에게 문의하세요.');
+				await AuthService.clearStoredTokens();
+				return;
+			}
 				const user: UserInfo = {
 					username: String(roomInfo?.upn || ''),
 					name: String(me?.name || ''),

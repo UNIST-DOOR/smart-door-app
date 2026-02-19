@@ -78,16 +78,36 @@ function App() {
 
       const tokens = await AuthService.refreshTokens();
       if (!tokens?.accessToken) {
+        // Refresh Token 만료 → 토큰 삭제
+        await AuthService.clearStoredTokens();
         return;
       }
       setAuthToken(tokens.accessToken);
+      
       // 백엔드로 사용자/방 정보 조회
       const unwrap = (res: any) => (res && typeof res === 'object' && 'data' in res ? (res as any).data : res);
       const meRes = await apiGet('/api/me/');
       const roomInfoRes = await apiGet('/api/room-info/');
+      
+      // 네트워크 오류 → 로그인 화면 유지 (토큰은 보존)
+      if (!meRes || !roomInfoRes) {
+        console.log('자동 로그인: 네트워크 오류 (토큰 보존)');
+        return;
+      }
+      
+      // 401/403 인증 오류 → 토큰 삭제
+      if (meRes.status === 401 || meRes.status === 403 || 
+          roomInfoRes.status === 401 || roomInfoRes.status === 403) {
+        await AuthService.clearStoredTokens();
+        return;
+      }
+      
       const me = unwrap(meRes);
       const roomInfo = unwrap(roomInfoRes);
+      
+      // 방 정보 없음 → 토큰 삭제
       if (!roomInfo?.ok || !roomInfo?.found) {
+        await AuthService.clearStoredTokens();
         return;
       }
       const user: UserInfo = {
@@ -103,8 +123,10 @@ function App() {
       };
       setUserInfo(user);
       setIsLoggedIn(true);
-    } catch (e) {
-      // 자동로그인 실패 시 로그인 화면 유지
+    } catch (e: any) {
+      // Refresh Token 오류 → 토큰 삭제
+      console.log('자동 로그인 실패:', e?.message || e);
+      await AuthService.clearStoredTokens();
     } finally {
       setIsAutoLoginInProgress(false);
     }
@@ -138,10 +160,28 @@ function App() {
         apiGet('/api/me/'),
         apiGet('/api/room-info/'),
       ]);
+      
+      // 네트워크 오류 (fetch 실패) → 현재 상태 유지
+      if (!meRes || !roomInfoRes) {
+        return;
+      }
+      
+      // 401/403 인증 오류 → 로그아웃
+      if (meRes.status === 401 || meRes.status === 403 || 
+          roomInfoRes.status === 401 || roomInfoRes.status === 403) {
+        await AuthService.clearStoredTokens();
+        setAuthToken(null);
+        setUserInfo(null);
+        setIsLoggedIn(false);
+        return;
+      }
+      
       const me = unwrap(meRes);
       const roomInfo = unwrap(roomInfoRes);
+      
+      // 방 정보 없음 → 로그아웃
       if (!roomInfo?.ok || !roomInfo?.found) {
-        // 권한 확인 실패 시 강제 로그아웃
+        await AuthService.clearStoredTokens();
         setAuthToken(null);
         setUserInfo(null);
         setIsLoggedIn(false);
@@ -160,11 +200,10 @@ function App() {
       };
       setUserInfo(user);
       setIsLoggedIn(true);
-    } catch {
-      // 네트워크/검증 실패 시 로그인 화면으로 회귀
-      setAuthToken(null);
-      setUserInfo(null);
-      setIsLoggedIn(false);
+    } catch (err: any) {
+      // 네트워크 오류 등은 무시 (일시적 끊김 허용)
+      // 현재 로그인 상태 유지
+      console.log('verifySessionOnResume 오류 (상태 유지):', err);
     }
   }, [isLoggedIn]);
 
