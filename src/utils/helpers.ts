@@ -53,63 +53,6 @@ export const isTargetDevice = (deviceName: string | null, prefix: string = 'unis
 };
 
 /**
- * 시간 동기화 명령어용 현재 시간 컴포넌트 가져오기
- */
-export const getCurrentTimeComponents = () => {
-  const now = new Date();
-  return {
-    year: now.getFullYear() % 100,  // 2자리 년도
-    month: now.getMonth() + 1,      // 1-12
-    date: now.getDate(),            // 1-31
-    hour: now.getHours(),           // 0-23
-    min: now.getMinutes()           // 0-59
-  };
-};
-
-/**
- * 숫자 텍스트를 16진수 바이트 배열로 파싱
- * @param numberText "11 22 33 44 55 66 1" 형태의 입력 텍스트
- * @returns 최대 7개의 16진수 바이트 배열, 부족한 부분은 0xFF로 패딩
- */
-export const parseNumberText = (numberText: string): number[] => {
-  if (!numberText.trim()) {
-    return Array(7).fill(0xFF);
-  }
-  
-  // 공백 제거 및 짝수 길이 보장
-  const cleanText = numberText.replace(/\s/g, '');
-  const paddedText = cleanText.length % 2 !== 0 ? cleanText + 'F' : cleanText;
-  
-  // 바이트 쌍으로 변환하고 최대 7바이트 추출
-  const bytePairs = paddedText.match(/.{1,2}/g) || [];
-  const numbers = bytePairs.slice(0, 7).map(pair => {
-    const parsed = parseInt(pair, 16);
-    return isNaN(parsed) ? 0xFF : parsed;
-  });
-  
-  // 7바이트까지 0xFF로 패딩
-  while (numbers.length < 7) {
-    numbers.push(0xFF);
-  }
-  
-  return numbers;
-};
-
-/**
- * 16진수 문자열 입력을 숫자로 파싱 
- * @param text 16진수 형식의 입력 텍스트
- * @param defaultValue 파싱 실패시 기본값
- * @returns 파싱된 숫자 또는 기본값
- */
-export const parseHexInput = (text: string, defaultValue: number = 0xFF): number => {
-  if (!text.trim()) return defaultValue;
-  
-  const padded = text.padStart(2, '0');
-  const parsed = parseInt(padded, 16);
-  return isNaN(parsed) ? defaultValue : parsed;
-};
-
-/**
  * 사용자 정보 기반 기기명 생성 (동 + 호수)
  * @param building 동 정보 (예: "301동")
  * @param room 호수 정보 (예: "101")
@@ -131,4 +74,20 @@ export const generateDeviceName = (building: string, room: string): string => {
 export const generateEntrancePrefix = (building: string): string => {
   const buildingNumber = (building || '').replace(/[^0-9]/g, '');
   return `unistdoor_${buildingNumber}`;
-}; 
+};
+
+/**
+ * 서버가 내려준 hex 문자열을 바이트 배열로 변환 (공백/대소문자 무시)
+ * @returns 형식이 올바르지 않거나 비어 있거나 64바이트를 넘으면 null
+ */
+export const hexToBytes = (hex: string): number[] | null => {
+  const clean = (hex || '').replace(/\s+/g, '');
+  if (clean.length === 0 || clean.length % 2 !== 0 || clean.length > 128 || !/^[0-9a-fA-F]+$/.test(clean)) {
+    return null;
+  }
+  const bytes: number[] = [];
+  for (let i = 0; i < clean.length; i += 2) {
+    bytes.push(parseInt(clean.slice(i, i + 2), 16));
+  }
+  return bytes;
+};

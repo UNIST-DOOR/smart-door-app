@@ -3,9 +3,10 @@ import { View, Text, ScrollView, Alert, TouchableOpacity, StatusBar, Image, Acti
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBLE } from '../../hooks/useBLE';
-import { useDoor } from '../../hooks/useDoor';
+import { useDoor, OpenOutcome } from '../../hooks/useDoor';
 // import { LogViewer } from '../../components/ui/LogViewer'; 디버그
 import { generateDeviceName } from '../../utils/helpers';
+import { showUpgradeAlert } from '../../utils/store';
 import { apiPost } from '../../lib/api';
 
 import { styles } from './DoorControlScreen.styles';
@@ -48,11 +49,35 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
 
   const {
     isSending,
-    quickCommands,
+    openRoomDoor,
+    openEntranceDoor,
     // logs, 디버그
     // clearLogs,
-    // copyLogsToClipboard,
   } = useDoor(bleService);
+
+  // 방 문 열기 실패 사유별 안내 문구
+  const openFailureMessage = (outcome: OpenOutcome): string => {
+    switch (outcome.status) {
+      case 'FORBIDDEN':
+        return outcome.reason === 'stay_expired'
+          ? '기숙사 이용 기간이 만료되었습니다.'
+          : '문을 열 수 있는 권한이 없습니다.\n관리사무소에 문의해 주세요.';
+      case 'RATE_LIMITED':
+        return '요청이 너무 많습니다.\n잠시 후 다시 시도해주세요.';
+      case 'OFFLINE':
+        return '인터넷에 연결되어 있지 않습니다.\n문을 열려면 인터넷 연결이 필요합니다.';
+      case 'UNAUTHORIZED':
+        return '로그인이 만료되었습니다.\n로그아웃 후 다시 로그인해 주세요.';
+      case 'BLE_FAIL':
+        return '도어락과 연결하지 못했습니다.\n도어락 가까이에서 다시 시도해주세요.';
+      case 'NO_RESPONSE':
+        return '도어락이 응답하지 않았습니다.\n잠시 후 다시 시도해주세요.';
+      case 'DOOR_FAIL':
+        return '도어락이 명령을 처리하지 못했습니다.\n다시 시도해주세요.';
+      default:
+        return '도어락 열기에 실패했습니다.\n다시 시도해주세요.';
+    }
+  };
 
   // fo_door_tran 일시 포맷팅(IDATE+ITIME / ODATE+OTIME)
   const formatDoorTran = (dateStr?: string, timeStr?: string) => {
@@ -171,19 +196,24 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         return;
       }
       
-      // 자동 문열기 실행 (스캔 → 연결 → 전송)
-      const success = await quickCommands.autoOpenDoor(deviceName);
-      
-      if (success) {
+      // 문 열기 실행 (서버에서 서명 패킷 받기 → 스캔·연결 → 전송)
+      const outcome = await openRoomDoor({
+        bleid: userInfo.bleId?.replace(/[^0-9]/g, '') || undefined,
+        fallbackDeviceName: deviceName,
+      });
+
+      if (outcome.status === 'OK') {
         showAutoAlert('성공', '도어락이 열렸습니다!');
-        
-        // 백엔드에 로그 전송 (비동기, 실패해도 무시)
+
+        // 기존 문 열림 로그(mqtt_cmd_log). 서명 문열기 로그(BLE_OPEN_LOG)는 서버가 따로 남긴다.
         apiPost('/api/door/log/', {
           platform: Platform.OS,
           doorType: 'door',
         }).catch(err => console.warn('[로그] 도어락 로그 전송 실패:', err));
+      } else if (outcome.status === 'UPGRADE_REQUIRED') {
+        showUpgradeAlert();
       } else {
-        Alert.alert('실패', '도어락 열기에 실패했습니다.\n다시 시도해주세요.');
+        Alert.alert('실패', openFailureMessage(outcome));
       }
     } catch (error) {
       Alert.alert('오류', `문열기 중 오류가 발생했습니다: ${error}`);
@@ -237,28 +267,17 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         return;
       }
 
-      // 공동현관문 자동 열기 실행 (접두사 스캔 → 연결 → 전송)
-      const success = await quickCommands.autoOpenEntranceDoor(undefined, { building: userInfo.building });
-      
+      // 공동현관문 열기 실행 (접두사 스캔 → 연결 → 전송 → 연결 종료)
+      const success = await openEntranceDoor(userInfo.building);
+
       if (success) {
         showAutoAlert('성공', '공동현관문이 열렸습니다!');
-        
+
         // 백엔드에 로그 전송 (비동기, 실패해도 무시)
         apiPost('/api/door/log/', {
           platform: Platform.OS,
           doorType: 'relay',
         }).catch(err => console.warn('[로그] 공동현관문 로그 전송 실패:', err));
-        
-        // 공동현관문은 응답값이 없으므로 수동으로 연결해제
-        // addLog('🔌 연결 해제 중...', 'info'); // This line was removed as per the new_code, as addLog is not defined.
-        setTimeout(async () => {
-          try {
-            await bleService?.disconnect();
-            // addLog('✅ 연결해제 완료', 'success'); // This line was removed as per the new_code, as addLog is not defined.
-          } catch (error) {
-            // addLog(`⚠️ 연결해제 중 오류: ${error}`, 'warning'); // This line was removed as per the new_code, as addLog is not defined.
-          }
-        }, 2000); // 2초 후 연결해제
       } else {
         Alert.alert('실패', '공동현관문 열기에 실패했습니다.\n다시 시도해주세요.');
       }

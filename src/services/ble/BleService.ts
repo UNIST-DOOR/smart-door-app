@@ -1,9 +1,21 @@
-import { BleManager, Device, Characteristic } from 'react-native-ble-plx';
+import { BleManager, Device, Characteristic, ScanMode } from 'react-native-ble-plx';
 import { PermissionsAndroid, Platform } from 'react-native';
 import { Buffer } from 'buffer';
 import { BLE_UUIDS, APP_CONFIG } from '../../utils/constants';
 import { BleDevice, BleConnectionState } from '../../types/ble';
 import { isTargetDevice } from '../../utils/helpers';
+import { bleErrorLog, perfLog } from '../../utils/perf';
+
+// 문 열기 스캔은 저지연 모드로 한다 (기본 모드는 폰이 가끔씩만 스캔해서 기기를 찾는 시간이 들쭉날쭉했다). 안드로이드 전용 옵션.
+const DOOR_SCAN_OPTIONS = { scanMode: ScanMode.LowLatency };
+
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+// 연결 실패 원인 코드 (예: E133). 서버 로그(stage)와 진단용으로 짧게 만든다.
+const describeBleError = (error: any): string => {
+  const code = error?.androidErrorCode ?? error?.errorCode;
+  return code !== undefined && code !== null ? `E${code}` : 'E?';
+};
 
 class BleService {
   private manager: BleManager;
@@ -11,6 +23,14 @@ class BleService {
   private commandCharacteristic: Characteristic | null = null;
   private notifyCharacteristic: Characteristic | null = null;
   
+  // 마지막 연결 실패 원인 (예: E133, SCAN_TIMEOUT, NO_SERVICE). 서버 로그(stage)와 진단용
+  public lastConnectError: string | null = null;
+
+  // 진행 중인 스캔·연결을 취소하기 위한 상태 (서버가 거절했을 때 등)
+  private abortRequested = false;
+  private connectingDeviceId: string | null = null;
+  private rejectPendingConnect: (() => void) | null = null;
+
   // 이벤트 콜백
   public onDeviceFound?: (device: BleDevice) => void;
   public onConnectionStateChange?: (state: BleConnectionState) => void;
@@ -142,6 +162,10 @@ class BleService {
    */
   async scanAndAutoConnect(targetDeviceName?: string): Promise<boolean> {
     try {
+      this.lastConnectError = null;
+      this.abortRequested = false;
+      this.rejectPendingConnect = null;
+
       // 이미 연결되어 있으면 성공 반환
       if (this.isConnected()) {
         return true;
@@ -166,23 +190,30 @@ class BleService {
           return;
         }
 
+        // 취소되면(서버 거절 등) 대기 중인 연결 약속을 바로 실패 처리한다
+        this.rejectPendingConnect = () => reject(new Error('연결 취소'));
+
         // 스캔 시작
-        this.manager.startDeviceScan(null, null, async (error, device) => {
+        perfLog('BLE 스캔 시작');
+        this.manager.startDeviceScan(null, DOOR_SCAN_OPTIONS, async (error, device) => {
           if (error) {
             this.stopScan();
+            this.lastConnectError = 'SCAN_ERR';
+            bleErrorLog('스캔', error);
             this.onError?.(`❌ 스캔 오류: ${error.message}`);
             reject(new Error(`스캔 오류: ${error.message}`));
             return;
           }
 
           // 목표 기기 찾음 (정확 일치)
-          if (device && device.name === targetDeviceName && !found) {
+          if (device && device.name === targetDeviceName && !found && !this.abortRequested) {
             found = true;
+            perfLog('기기 발견 (스캔 소요)');
             this.stopScan();
             
             try {
               // 자동 연결 시도
-              const connected = await this.connectToDevice(device.id);
+              const connected = await this.connectWithRetry(device.id);
               
               if (connected) {
                 this.onConnectionStateChange?.({
@@ -211,6 +242,7 @@ class BleService {
         setTimeout(() => {
           if (!found) {
             this.stopScan();
+            this.lastConnectError = 'SCAN_TIMEOUT';
             this.onError?.(`⏰ 기기를 찾을 수 없습니다: ${targetDeviceName}`);
             reject(new Error(`기기를 찾을 수 없습니다: ${targetDeviceName}`));
           }
@@ -229,6 +261,10 @@ class BleService {
    */
   async scanAndAutoConnectByPrefix(prefix: string): Promise<boolean> {
     try {
+      this.lastConnectError = null;
+      this.abortRequested = false;
+      this.rejectPendingConnect = null;
+
       if (this.isConnected()) {
         return true;
       }
@@ -252,9 +288,11 @@ class BleService {
       return new Promise((resolve, reject) => {
         let found = false;
 
-        this.manager.startDeviceScan(null, null, async (error, device) => {
+        this.manager.startDeviceScan(null, DOOR_SCAN_OPTIONS, async (error, device) => {
           if (error) {
             this.stopScan();
+            this.lastConnectError = 'SCAN_ERR';
+            bleErrorLog('스캔', error);
             this.onError?.(`❌ 스캔 오류: ${error.message}`);
             reject(new Error(`스캔 오류: ${error.message}`));
             return;
@@ -266,7 +304,7 @@ class BleService {
             this.stopScan();
 
             try {
-              const connected = await this.connectToDevice(device!.id);
+              const connected = await this.connectWithRetry(device!.id);
               if (connected) {
                 this.onConnectionStateChange?.({
                   isConnected: true,
@@ -294,6 +332,7 @@ class BleService {
         setTimeout(() => {
           if (!found) {
             this.stopScan();
+            this.lastConnectError = 'SCAN_TIMEOUT';
             this.onError?.(`⏰ 접두사와 일치하는 기기를 찾지 못했습니다: ${prefix}`);
             reject(new Error(`기기를 찾지 못했습니다: ${prefix}`));
           }
@@ -303,6 +342,77 @@ class BleService {
     } catch (error) {
       this.onError?.(`❌ 접두사 자동 연결 실패: ${error}`);
       return false;
+    }
+  }
+
+  /**
+   * 연결 시도가 실패하거나 중단됐을 때 폰/모듈에 남을 수 있는 GATT 연결을 확실히 닫는다.
+   * (닫지 않으면 모듈이 이전 연결 때문에 다음 연결을 늦게 받거나 거부할 수 있다)
+   */
+  private async releaseConnection(deviceId: string): Promise<void> {
+    try {
+      await this.manager.cancelDeviceConnection(deviceId);
+    } catch {
+      // 이미 끊겨 있으면 오류가 나므로 무시한다
+    }
+    this.connectedDevice = null;
+    this.commandCharacteristic = null;
+    this.notifyCharacteristic = null;
+  }
+
+  /**
+   * 진행 중인 스캔·연결을 취소한다. 서버가 문 열기를 거절했는데 스캔/연결이 남아 있으면 안 되기 때문이다.
+   * 이미 연결이 끝났다면 아무 일도 하지 않으므로, 연결을 끊으려면 disconnect() 를 따로 호출한다.
+   */
+  cancelConnect(): void {
+    this.abortRequested = true;
+    this.lastConnectError = 'ABORTED';
+    this.stopScan();
+    if (this.connectingDeviceId) {
+      // 진행 중인 GATT 연결 시도를 중단시킨다
+      this.manager.cancelDeviceConnection(this.connectingDeviceId).catch(() => undefined);
+    }
+    this.rejectPendingConnect?.();
+  }
+
+  /**
+   * 연결 실패 시 정리한 뒤 같은 기기에 자동으로 다시 연결한다. (재스캔 없이)
+   * 안드로이드는 GATT 연결이 가끔 실패(예: 오류 133)하므로 학생이 다시 누르지 않도록 한 번 더 시도한다.
+   * 취소(cancelConnect)가 요청되면 재시도하지 않고 연결을 정리한다.
+   */
+  private async connectWithRetry(deviceId: string): Promise<boolean> {
+    const attempts = 1 + APP_CONFIG.CONNECT_RETRY_COUNT;
+    this.connectingDeviceId = deviceId;
+    try {
+      for (let attempt = 1; attempt <= attempts; attempt++) {
+        const connected = await this.connectToDevice(deviceId);
+
+        if (this.abortRequested) {
+          await this.releaseConnection(deviceId);
+          this.lastConnectError = 'ABORTED';
+          return false;
+        }
+        if (connected) {
+          if (attempt > 1) {
+            perfLog(`연결 재시도 성공 (${attempt}번째 시도)`);
+          }
+          this.lastConnectError = null; // 결국 연결됐으면 이전 실패 원인은 지운다
+          return true;
+        }
+
+        perfLog(`연결 실패 (${attempt}/${attempts}번째 시도, ${this.lastConnectError ?? '원인 불명'})`);
+        await this.releaseConnection(deviceId);
+        if (attempt < attempts) {
+          await sleep(APP_CONFIG.CONNECT_RETRY_DELAY);
+          if (this.abortRequested) {
+            this.lastConnectError = 'ABORTED';
+            return false;
+          }
+        }
+      }
+      return false;
+    } finally {
+      this.connectingDeviceId = null;
     }
   }
 
@@ -331,10 +441,12 @@ class BleService {
       });
       
       this.connectedDevice = device;
+      perfLog('GATT 연결 완료');
 
       // 서비스 및 특성 검색
       this.onError?.(`🔍 서비스 검색 중...`);
       await device.discoverAllServicesAndCharacteristics();
+      perfLog('서비스·특성 검색 완료');
       
       // 실제 기기에서 MAIN_UUID 서비스 사용
       const services = await device.services();
@@ -346,6 +458,7 @@ class BleService {
       
       if (!service) {
         this.onError?.(`❌ 서비스를 찾을 수 없습니다: ${BLE_UUIDS.MAIN_UUID}`);
+        this.lastConnectError = 'NO_SERVICE';
         return false;
       }
       this.onError?.(`✅ 서비스 발견: ${service.uuid}`);
@@ -363,6 +476,7 @@ class BleService {
       
       if (!commandChar) {
         this.onError?.(`❌ 명령 특성을 찾을 수 없습니다: ${BLE_UUIDS.COMMAND_UUID}`);
+        this.lastConnectError = 'NO_CHAR';
         return false;
       }
       this.onError?.(`✅ 명령 특성 발견: ${commandChar.uuid}`);
@@ -420,6 +534,7 @@ class BleService {
           }
         });
         this.onError?.(`✅ Notify 구독 성공!`);
+        perfLog('알림(Notify) 구독 완료');
       } catch (notifyError) {
         this.onError?.(`❌ Notify 구독 실패: ${notifyError}`);
         // 알림 실패해도 연결은 성공으로 처리 (명령 전송은 가능)
@@ -438,6 +553,8 @@ class BleService {
       return true;
 
     } catch (error) {
+      this.lastConnectError = describeBleError(error);
+      bleErrorLog('연결', error);
       this.onError?.(`❌ 연결 실패: ${error}`);
       this.connectedDevice = null;
       this.commandCharacteristic = null;
@@ -464,6 +581,22 @@ class BleService {
     } catch (error) {
       this.onError?.(`전송 실패: ${error}`);
       return false;
+    }
+  }
+
+  /**
+   * 연결된 기기에 MTU 를 요청하고 협상된 MTU 를 돌려준다. (Android 전용, 실패/미지원이면 null)
+   * 패킷을 한 번에 쓰려면 MTU >= 패킷 길이 + 3 이어야 한다.
+   */
+  async requestMtu(mtu: number): Promise<number | null> {
+    if (Platform.OS !== 'android' || !this.connectedDevice) {
+      return null;
+    }
+    try {
+      const updated = await this.connectedDevice.requestMTU(mtu);
+      return typeof updated?.mtu === 'number' ? updated.mtu : null;
+    } catch {
+      return null;
     }
   }
 

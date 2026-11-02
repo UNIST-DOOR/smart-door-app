@@ -1,317 +1,297 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import DoorService from '../services/door/DoorService';
-import { LogMessage, LogLevel } from '../types/door';
-import { generateId } from '../utils/helpers';
-import { COMMAND_LIST, EXTENDED_COMMANDS } from '../utils/constants';
 import BleService from '../services/ble/BleService';
-import { generateEntrancePrefix } from '../utils/helpers';
+import {
+  OpenResultCode,
+  flushPendingResults,
+  reportOpenResult,
+  requestOpenPacket,
+  OpenPacketResponse,
+} from '../services/door/OpenDoorApi';
+import { LogMessage, LogLevel } from '../types/door';
+import { APP_CONFIG } from '../utils/constants';
+import { generateId, generateEntrancePrefix } from '../utils/helpers';
+import { perfLog, perfReset } from '../utils/perf';
+
+const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms));
+
+export type OpenOutcome =
+  | { status: 'OK' }
+  | { status: 'UPGRADE_REQUIRED' } // 최소 버전 미만 (426)
+  | { status: 'UNAUTHORIZED' } // 로그인 만료 (401)
+  | { status: 'FORBIDDEN'; reason?: string } // 권한 없음 (403)
+  | { status: 'RATE_LIMITED' }
+  | { status: 'OFFLINE' } // 서버에서 패킷을 받아야 하므로 오프라인에서는 열 수 없음
+  | { status: 'BLE_FAIL' } // 스캔·연결·전송 실패
+  | { status: 'NO_RESPONSE' } // 도어락 무응답
+  | { status: 'DOOR_FAIL' } // 도어락이 실패 응답
+  | { status: 'ERROR' };
+
+const issueFailureToOutcome = (issued: Exclude<OpenPacketResponse, { kind: 'ok' }>): OpenOutcome => {
+  switch (issued.kind) {
+    case 'upgrade_required':
+      return { status: 'UPGRADE_REQUIRED' };
+    case 'unauthorized':
+      return { status: 'UNAUTHORIZED' };
+    case 'forbidden':
+      return { status: 'FORBIDDEN', reason: issued.reason };
+    case 'rate_limited':
+      return { status: 'RATE_LIMITED' };
+    case 'offline':
+      return { status: 'OFFLINE' };
+    default:
+      return { status: 'ERROR' };
+  }
+};
 
 export const useDoor = (bleService: BleService | null) => {
-  const [selectedCommand, setSelectedCommand] = useState<{ code: number; name: string }>(COMMAND_LIST[0]);
   const [isSending, setIsSending] = useState(false);
   const [logs, setLogs] = useState<LogMessage[]>([]);
-  const [sendProgress, setSendProgress] = useState({ sent: 0, total: 0 });
-
-
-  const [orderText, setOrderText] = useState('');
-  const [numberText, setNumberText] = useState('');
-  const [cycleText, setCycleText] = useState('');
-
   const doorServiceRef = useRef<DoorService | null>(null);
 
-  useEffect(() => {
-    if (!bleService) return;
-
-    // 도어 서비스 초기화
-    const doorService = new DoorService(bleService);
-    doorServiceRef.current = doorService;
-
-    // 이벤트 콜백 설정
-    doorService.onSendProgress = (byte: number, remaining: number) => {
-      setSendProgress(prev => {
-        const sent = prev.total - remaining;
-        return { sent, total: prev.total };
-      });
-      
-      addLog(
-        `전송: 0x${byte.toString(16).toUpperCase().padStart(2, '0')}`,
-        'info'
-      );
-    };
-
-    doorService.onSendComplete = () => {
-      setIsSending(false);
-      setSendProgress({ sent: 0, total: 0 });
-      addLog('✅ 전체 바이트 전송 완료', 'success');
-    };
-
-    doorService.onSendError = (error: string) => {
-      setIsSending(false);
-      setSendProgress({ sent: 0, total: 0 });
-      addLog(`❌ 전송 실패: ${error}`, 'error');
-    };
-
-    doorService.onInfo = (message: string) => {
-      addLog(message, 'info');
-    };
-
-    return () => {
-      doorService.cancelSending();
-    };
-  }, [bleService]);
-
-  const addLog = (message: string, level: LogLevel = 'info') => {
+  // 로그에는 패킷 내용(키로 서명된 바이트)을 남기지 않는다.
+  const addLog = useCallback((message: string, level: LogLevel = 'info') => {
     const newLog: LogMessage = {
       id: generateId(),
       message,
       level,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
     setLogs(prev => [...prev, newLog]);
-  };
+  }, []);
 
-  const sendCommand = async (commandCode?: number, params?: {
-    orderText?: string;
-    numberText?: string;
-    cycleText?: string;
-  }) => {
-    if (!doorServiceRef.current) {
-      addLog('도어 서비스가 초기화되지 않았습니다', 'error');
-      return false;
-    }
+  useEffect(() => {
+    if (!bleService) return;
 
-    const cmd = commandCode || selectedCommand.code;
-    const commandParams = params || (isExtendedCommand(cmd) ? {
-      orderText,
-      numberText,
-      cycleText
-    } : undefined);
-    
-    setIsSending(true);
-    
-    // 총 바이트 수 추정 (확장 명령어는 13바이트, 기타는 10바이트)
-    const totalBytes = isExtendedCommand(cmd) ? 13 : 10;
-    setSendProgress({ sent: 0, total: totalBytes });
-    
-    // 명령어 세부사항 로그
-    let commandInfo = `명령 전송 시작: ${doorServiceRef.current.getCommandName(cmd)}`;
-    if (commandParams) {
-      const details = [];
-      if (commandParams.orderText) details.push(`순번: ${commandParams.orderText}`);
-      if (commandParams.numberText) details.push(`번호: ${commandParams.numberText}`);
-      if (commandParams.cycleText) details.push(`차수: ${commandParams.cycleText}`);
-      if (details.length > 0) {
-        commandInfo += ` (${details.join(', ')})`;
-      }
-    }
-    addLog(commandInfo, 'info');
-    
-    const success = await doorServiceRef.current.sendCommand(cmd, commandParams);
-    
-    if (!success) {
-      setIsSending(false);
-      setSendProgress({ sent: 0, total: 0 });
-    }
-    
-    return success;
-  };
+    const doorService = new DoorService(bleService);
+    doorService.onInfo = (message: string) => addLog(message, 'info');
+    doorServiceRef.current = doorService;
 
-  const isExtendedCommand = (code: number): boolean => {
-    return EXTENDED_COMMANDS.includes(code as any);
-  };
+    return () => {
+      doorService.cancelSending();
+    };
+  }, [bleService, addLog]);
 
   /**
-   * 자동 문열기 기능 (스캔 → 연결 → 전송)
+   * 방 문 열기: 앱 서버에서 서명된 패킷 받기 → 스캔·연결 → 패킷 쓰기 → 응답 대기 → 연결 종료 → 결과 보고
+   * 응답이 없으면(서명이 틀리면 모듈은 응답하지 않는다) 새 패킷을 받아 1회만 재시도한다.
+   * 패킷은 1회용이라 저장하거나 다시 쓰지 않는다.
    */
-  const autoOpenDoor = async (targetDeviceName?: string): Promise<boolean> => {
-    if (!bleService) {
+  const openRoomDoor = async (options: {
+    bleid?: string;
+    fallbackDeviceName?: string;
+  }): Promise<OpenOutcome> => {
+    const doorService = doorServiceRef.current;
+    if (!bleService || !doorService) {
       addLog('❌ BLE 서비스가 초기화되지 않았습니다', 'error');
-      return false;
+      return { status: 'ERROR' };
     }
 
+    setIsSending(true);
+    bleService.onError = (message: string) => addLog(message, 'info');
+
+    // 연결이 끝난 뒤 모듈이 안정될 때까지의 고정 대기. 연결(MTU 협상 포함)이 끝난 시점부터 잰다.
+    const SETTLE_MS = 1000;
+
+    // 도어락 검색·연결·MTU 협상. 서버 호출과 동시에 진행되며 절대 reject 되지 않는다.
+    const connectDoor = async (name?: string): Promise<{ connected: boolean; mtu: number | null; readyAt: number }> => {
+      let connected = false;
+      try {
+        connected = !!name && (await bleService.scanAndAutoConnect(name));
+      } catch {
+        connected = false;
+      }
+      perfLog(connected ? 'BLE 스캔+연결 완료' : 'BLE 연결 실패');
+
+      let mtu: number | null = null;
+      if (connected && APP_CONFIG.BULK_WRITE) {
+        mtu = await bleService.requestMtu(APP_CONFIG.REQUEST_MTU);
+        perfLog(`MTU 협상 (${mtu ?? '실패'})`);
+      }
+      return { connected, mtu, readyAt: Date.now() };
+    };
+
+    const attempt = async (retryOf?: string): Promise<{ outcome: OpenOutcome; requestId?: string }> => {
+      const startedAt = Date.now();
+      perfReset(retryOf ? '문 열기 재시도' : '문 열기 시작');
+
+      // 서버 패킷 발급과 도어락 검색·연결을 동시에 시작한다. 둘 다 끝나야 패킷을 쓴다.
+      // 서버가 거절하면(403, 426, 오프라인 등) 진행 중인 스캔·연결을 즉시 중단한다.
+      const earlyName = options.bleid ? `unist_${options.bleid}` : options.fallbackDeviceName;
+      addLog('1️⃣ 서버 패킷 요청 + 도어락 검색 동시 시작...', 'info');
+      const issuing = requestOpenPacket({ bleid: options.bleid, retryOf }).then(response => {
+        perfLog(`서버 패킷 응답 (${response.kind})`);
+        if (response.kind !== 'ok') {
+          bleService.cancelConnect();
+        }
+        return response;
+      });
+      const connecting = connectDoor(earlyName);
+
+      const issued = await issuing;
+      if (issued.kind !== 'ok') {
+        addLog(`❌ 패킷 발급 실패: ${issued.kind}`, 'error');
+        await connecting; // 중단이 끝나길 기다린다
+        await bleService.disconnect(); // 혹시 연결됐다면 끊는다
+        return { outcome: issueFailureToOutcome(issued) };
+      }
+      addLog(`✅ 패킷 수신 (${issued.packet.length}바이트, ${issued.signed ? '서명' : '원본'})`, 'success');
+
+      // 서버가 찾은 bleid 가 우선이다 (앱이 가진 값은 화면 표시용 정보일 수 있음)
+      const targetName = issued.bleid ? `unist_${issued.bleid}` : earlyName;
+      let conn = await connecting;
+      if (earlyName !== targetName) {
+        // 앱이 짐작한 문과 서버가 찾은 문이 다르거나 처음에 문 이름을 몰랐던 경우(드묾): 올바른 문에 다시 연결한다
+        if (conn.connected) {
+          await bleService.disconnect();
+        }
+        conn = await connectDoor(targetName);
+      }
+
+      let result: OpenResultCode;
+      let stage: string;
+      let responseHex: string | undefined;
+
+      if (!conn.connected) {
+        result = 'BLE_FAIL';
+        // 실패 원인 코드(예: connect:E133, connect:SCAN_TIMEOUT)를 함께 남긴다 (STAGE 는 20자 이내)
+        stage = `connect${bleService.lastConnectError ? `:${bleService.lastConnectError}` : ''}`.slice(0, 20);
+      } else {
+        // 패킷을 한 번에 쓸 수 있는지(MTU) 확인. 부족하면 1바이트씩 쓴다.
+        const bulk = conn.mtu !== null && conn.mtu >= issued.packet.length + 3;
+        if (APP_CONFIG.BULK_WRITE) {
+          perfLog(`패킷 쓰기 방식: ${bulk ? '한 번에 쓰기' : '1바이트씩 쓰기'}`);
+        }
+
+        // 연결 후 고정 대기. 서버 응답을 기다린 시간도 여기에 포함되므로 연결 후 1초보다 짧아지지는 않는다.
+        const remaining = Math.max(0, SETTLE_MS - (Date.now() - conn.readyAt));
+        if (remaining > 0) {
+          await sleep(remaining);
+        }
+        perfLog('고정 대기 끝');
+
+        addLog('3️⃣ 패킷 전송 중...', 'info');
+        const sent = await doorService.sendPacket(issued.packet, {
+          responseTimeoutMs: APP_CONFIG.RESPONSE_TIMEOUT,
+          bulk,
+        });
+        responseHex = sent.responseHex;
+        perfLog(`패킷 전송·응답 끝 (${sent.result})`);
+        switch (sent.result) {
+          case 'OK':
+            result = 'OK';
+            stage = 'response';
+            break;
+          case 'DOOR_FAIL':
+            result = 'DOOR_FAIL';
+            stage = 'response';
+            break;
+          case 'NO_RESPONSE':
+            result = 'NO_RESPONSE';
+            stage = 'response';
+            break;
+          default:
+            result = 'BLE_FAIL';
+            stage = 'write';
+        }
+        // 응답을 받은 경우 도어락이 문을 처리할 시간을 잠시 준 뒤 연결을 끊는다.
+        if (sent.result === 'OK' || sent.result === 'DOOR_FAIL') {
+          await sleep(500);
+        }
+      }
+
+      await bleService.disconnect();
+      perfLog('연결 종료');
+
+      // 결과 보고는 문 열기 결과에 영향을 주지 않는다 (실패하면 저장했다가 나중에 보냄)
+      reportOpenResult({
+        requestId: issued.requestId,
+        result,
+        stage,
+        doorResponseHex: responseHex,
+        elapsedMs: Date.now() - startedAt,
+      }).catch(() => {});
+
+      return { outcome: { status: result } as OpenOutcome, requestId: issued.requestId };
+    };
+
     try {
-      setIsSending(true);
-      addLog('🔍 자동 문열기 시작...', 'info');
-      
-      // BLE 서비스 로그 콜백 설정 (실시간 로그 표시)
-      bleService.onError = (message: string) => {
-        addLog(message, 'info');
-      };
-      
-      // 1단계: BLE 초기화 및 권한 확인
-      addLog('1️⃣ BLE 초기화 중...', 'info');
+      flushPendingResults().catch(() => {});
+
+      addLog('🔍 문 열기 시작...', 'info');
       const initialized = await bleService.initialize();
       if (!initialized) {
         addLog('❌ BLE 초기화 실패', 'error');
-        return false;
+        return { status: 'BLE_FAIL' };
       }
-      addLog('✅ BLE 초기화 완료', 'success');
-      
-      // 2단계: 자동 스캔 및 연결
-      addLog(`2️⃣ ${targetDeviceName} 기기 검색 중...`, 'info');
-      
-      // 기기 검색 및 연결 (상세 로그는 BLE 서비스에서 처리)
-      const connected = await bleService.scanAndAutoConnect(targetDeviceName);
-      if (!connected) {
-        addLog('❌ 기기 연결 실패', 'error');
-        return false;
+
+      let current = await attempt();
+      if (current.outcome.status === 'NO_RESPONSE' && current.requestId) {
+        addLog('⚠️ 응답 없음 - 새 패킷으로 1회 재시도', 'warning');
+        current = await attempt(current.requestId);
       }
-      addLog('✅ 기기 연결 성공', 'success');
-      
-      // 잠시 대기 (서비스 발견 완료 대기)
-      addLog('⏳ 서비스 발견 대기 중...', 'info');
-      await new Promise(resolve => setTimeout(() => resolve(undefined), 1000));
-      
-      // 3단계: 0x01 명령어 전송 (문열기)
-      addLog('3️⃣ 문열기 명령 전송 중...', 'info');
-      addLog(`🔧 연결기기명: ${targetDeviceName}`, 'info');
-      addLog(`🔗 BLE연결: ${bleService.isConnected() ? '✅연결됨' : '❌연결안됨'}`, 'info');
-      
-      // DoorService에 연결된 기기명 설정
-      if (doorServiceRef.current && targetDeviceName) {
-        doorServiceRef.current.setConnectedDeviceName(targetDeviceName);
-      }
-      
-      const success = await sendCommand(0x01);
-      if (success) {
+
+      if (current.outcome.status === 'OK') {
         addLog('🎉 문열기 완료!', 'success');
-      } else {
-        addLog('❌ 문열기 명령 전송 실패', 'error');
       }
-      
-      return success;
-      
+      return current.outcome;
     } catch (error) {
-      addLog(`❌ 자동 문열기 오류: ${error}`, 'error');
-      return false;
+      addLog(`❌ 문열기 오류: ${error}`, 'error');
+      return { status: 'ERROR' };
     } finally {
       setIsSending(false);
-      // 로그 콜백 해제
-      if (bleService) {
-        bleService.onError = undefined;
-      }
+      bleService.onError = undefined;
     }
   };
 
   /**
-   * 공동현관문 자동 열기 기능 (스캔 → 연결 → 전송)
-   * building 접두사 또는 명시적 기기명 사용
+   * 공동현관문 열기: 동 번호 접두사로 스캔·연결 → 0x21 전송. 이 패킷은 서명 대상이 아니다.
    */
-  const autoOpenEntranceDoor = async (
-    targetDeviceNameOrPrefix?: string,
-    opts?: { building?: string }
-  ): Promise<boolean> => {
-    if (!bleService) {
+  const openEntranceDoor = async (building: string): Promise<boolean> => {
+    const doorService = doorServiceRef.current;
+    if (!bleService || !doorService) {
       addLog('❌ BLE 서비스가 초기화되지 않았습니다', 'error');
       return false;
     }
 
+    setIsSending(true);
+    bleService.onError = (message: string) => addLog(message, 'info');
+
     try {
-      setIsSending(true);
       addLog('🚪 공동현관문 열기 시작...', 'info');
-      
-      // BLE 서비스 로그 콜백 설정 (실시간 로그 표시)
-      bleService.onError = (message: string) => {
-        addLog(message, 'info');
-      };
-      
-      // 1단계: BLE 초기화 및 권한 확인
-      addLog('1️⃣ BLE 초기화 중...', 'info');
       const initialized = await bleService.initialize();
       if (!initialized) {
         addLog('❌ BLE 초기화 실패', 'error');
         return false;
       }
-      addLog('✅ BLE 초기화 완료', 'success');
-      
-      // 2단계: 자동 스캔 및 연결
-      // building이 주어지면 접두사로 검색, 없으면 기존 단일명 검색
-      if (opts?.building) {
-        const prefix = generateEntrancePrefix(opts.building);
-        addLog(`2️⃣ 접두사(${prefix})로 공동현관 BLE 검색 중...`, 'info');
-        const connected = await bleService.scanAndAutoConnectByPrefix(prefix);
-        if (!connected) {
-          addLog('❌ 공동현관 BLE 연결 실패(접두사 매칭)', 'error');
-          return false;
-        }
-        addLog('✅ 공동현관 BLE 연결 성공', 'success');
-      } else {
-        if (!targetDeviceNameOrPrefix) {
-          addLog('❌ 공동현관 BLE 기기명이 제공되지 않았고 동번호도 없습니다. building 또는 기기명을 전달해주세요', 'error');
-          return false;
-        }
-        const target = targetDeviceNameOrPrefix;
-        addLog(`2️⃣ ${target} 기기 검색 중...`, 'info');
-        const connected = await bleService.scanAndAutoConnect(target);
-        if (!connected) {
-          addLog('❌ 기기 연결 실패', 'error');
-          return false;
-        }
-        addLog('✅ 기기 연결 성공', 'success');
+
+      const prefix = generateEntrancePrefix(building);
+      addLog(`접두사(${prefix})로 공동현관 BLE 검색 중...`, 'info');
+      let connected = false;
+      try {
+        connected = await bleService.scanAndAutoConnectByPrefix(prefix);
+      } catch {
+        connected = false;
       }
-      
-      // 잠시 대기 (서비스 발견 완료 대기)
-      addLog('⏳ 서비스 발견 대기 중...', 'info');
-      await new Promise(resolve => setTimeout(() => resolve(undefined), 1000));
-      
-      // 3단계: 0x21 명령어 전송 (공동현관문 열기)
-      addLog('3️⃣ 공동현관문 열기 명령 전송 중...', 'info');
-      const success = await sendCommand(0x21);
-      if (success) {
-        addLog('🎉 공동현관문 열기 완료!', 'success');
-        
-        // 공동현관문은 응답값이 없으므로 수동으로 연결해제
-        addLog('🔌 연결 해제 중...', 'info');
-        setTimeout(async () => {
-          try {
-            await bleService.disconnect();
-            addLog('✅ 연결해제 완료', 'success');
-          } catch (error) {
-            addLog(`⚠️ 연결해제 중 오류: ${error}`, 'warning');
-          }
-        }, 2000); // 2초 후 연결해제
-      } else {
-        addLog('❌ 공동현관문 열기 명령 전송 실패', 'error');
+      if (!connected) {
+        addLog('❌ 공동현관 BLE 연결 실패(접두사 매칭)', 'error');
+        return false;
       }
-      
+
+      await sleep(1000); // 서비스 발견 완료 대기
+      const success = await doorService.openEntrance();
+      addLog(success ? '🎉 공동현관문 열기 완료!' : '❌ 공동현관문 열기 명령 실패', success ? 'success' : 'error');
+
+      await sleep(500);
+      await bleService.disconnect();
       return success;
-      
     } catch (error) {
       addLog(`❌ 공동현관문 열기 오류: ${error}`, 'error');
       return false;
     } finally {
       setIsSending(false);
-      // 로그 콜백 해제
-      if (bleService) {
-        bleService.onError = undefined;
-      }
+      bleService.onError = undefined;
     }
-  };
-
-  const quickCommands = {
-    openDoor: () => sendCommand(0x01),
-    autoOpenDoor, // 기존 자동 문열기 기능
-    autoOpenEntranceDoor, // 접두사 기반 공동현관문 열기 기능
-    closeDoor: () => sendCommand(0x00),
-    checkStatus: () => sendCommand(0x02),
-    checkBattery: () => sendCommand(0x1C),
-    setTime: () => sendCommand(0x05),
-    registerStudent: () => {
-      if (!orderText || !numberText || !cycleText) {
-        addLog('학생증 등록: 순번, 번호, 차수를 모두 입력해주세요', 'error');
-        return Promise.resolve(false);
-      }
-      return sendCommand(0x1D, { orderText, numberText, cycleText });
-    },
-    deleteStudent: () => {
-      if (!orderText) {
-        addLog('학생증 삭제: 순번을 입력해주세요', 'error');
-        return Promise.resolve(false);
-      }
-      return sendCommand(0x1E, { orderText });
-    },
-    deleteAllStudents: () => sendCommand(0x1F)
   };
 
   const clearLogs = () => {
@@ -319,57 +299,12 @@ export const useDoor = (bleService: BleService | null) => {
     addLog('로그가 삭제되었습니다', 'info');
   };
 
-  const cancelSending = () => {
-    if (doorServiceRef.current) {
-      doorServiceRef.current.cancelSending();
-      setIsSending(false);
-      setSendProgress({ sent: 0, total: 0 });
-      addLog('전송이 취소되었습니다', 'warning');
-    }
-  };
-
-  const copyLogsToClipboard = () => {
-    const logText = logs.map(log => 
-      `[${log.timestamp.toLocaleTimeString()}] ${log.message}`
-    ).join('\n');
-    // 참고: 클립보드 기능은 react-native-clipboard/clipboard가 필요
-    addLog('로그가 클립보드에 복사되었습니다', 'info');
-    return logText;
-  };
-
   return {
-    // 상태
-    selectedCommand,
     isSending,
     logs,
-    sendProgress,
-    commandList: COMMAND_LIST,
-    
-    // 입력 필드 
-    orderText,
-    numberText,
-    cycleText,
-    setOrderText,
-    setNumberText,
-    setCycleText,
-    
-    // 액션
-    setSelectedCommand,
-    sendCommand,
+    openRoomDoor,
+    openEntranceDoor,
     clearLogs,
-    cancelSending,
-    copyLogsToClipboard,
     addLog,
-    
-    // 빠른 명령어
-    quickCommands,
-    
-    // 헬퍼
-    isExtendedCommand,
-    
-    // 게터
-    canSend: !isSending && doorServiceRef.current?.isSendingCommand() === false,
-    doorService: doorServiceRef.current,
-    showExtendedInputs: isExtendedCommand(selectedCommand.code)
   };
-}; 
+};
