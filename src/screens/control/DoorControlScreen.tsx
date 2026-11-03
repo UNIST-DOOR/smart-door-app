@@ -65,7 +65,7 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
       case 'RATE_LIMITED':
         return '요청이 너무 많습니다.\n잠시 후 다시 시도해주세요.';
       case 'OFFLINE':
-        return '서버에 연결할 수 없습니다.\n인터넷 연결을 확인하고 다시 시도해 주세요.';
+        return '서버와 통신하지 못했습니다.\n잠시 후 다시 시도해 주세요.\n계속되면 관리자에게 문의해 주세요.';
       case 'UNAUTHORIZED':
         return '로그인이 만료되었습니다.\n로그아웃 후 다시 로그인해 주세요.';
       case 'BLE_FAIL':
