@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiPost } from '../../lib/api';
+import { apiPost, isTokenFailure } from '../../lib/api';
 import { hexToBytes } from '../../utils/helpers';
 
 /**
@@ -14,6 +14,7 @@ export type OpenPacketResponse =
   | { kind: 'unauthorized' } // 401: 로그인 만료
   | { kind: 'forbidden'; reason?: string } // 403: 방 배정 없음, 이용기간 만료 등
   | { kind: 'rate_limited' } // 429
+  | { kind: 'server_error' } // 5xx: 서버 장애 (DB 연결 실패 등). 잠시 뒤 다시 시도하면 된다
   | { kind: 'offline' } // 서버에 연결할 수 없음
   | { kind: 'error' };
 
@@ -42,17 +43,24 @@ export const requestOpenPacket = async (params: {
     }
   }
 
+  // 토큰 문제: 401, 또는 예전 서버가 토큰 오류를 403 {"detail": ...} 로 주던 경우.
+  // 문을 열 권한이 없는 403 은 {"error": "forbidden"} 형태라 아래 forbidden 으로 간다. (토큰 만료를 "권한 없음"으로 안내하면 안 된다)
+  if (isTokenFailure(res)) {
+    return { kind: 'unauthorized' };
+  }
+
   switch (res.status) {
     case 426:
       return { kind: 'upgrade_required' };
-    case 401:
-      return { kind: 'unauthorized' };
     case 403: {
       const reason = res.data && typeof res.data === 'object' ? res.data.reason : undefined;
       return { kind: 'forbidden', reason: typeof reason === 'string' ? reason : undefined };
     }
     case 429:
       return { kind: 'rate_limited' };
+  }
+  if (res.status >= 500) {
+    return { kind: 'server_error' };
   }
 
   const body = res.data;

@@ -277,3 +277,84 @@ describe('DoorControlScreen 성공 알림', () => {
     expect(modalVisible()).toBe(false);
   });
 });
+
+describe('DoorControlScreen 열기 실패 안내 (이유별)', () => {
+  let alertSpy: jest.SpyInstance;
+  let onLogout: jest.Mock;
+
+  beforeEach(async () => {
+    mockOpenRoomDoor.mockReset();
+    mockBle.getBluetoothIssue.mockReset().mockResolvedValue('NONE');
+    mockBleService = mockBle;
+    alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    onLogout = jest.fn();
+    await act(async () => {
+      renderer = ReactTestRenderer.create(<DoorControlScreen onLogout={onLogout} userInfo={userInfo} />);
+    });
+  });
+  afterEach(() => {
+    act(() => {
+      renderer?.unmount();
+    });
+    jest.restoreAllMocks();
+  });
+
+  const failWith = async (outcome: object) => {
+    mockOpenRoomDoor.mockResolvedValue(outcome);
+    await press('도어락 열기');
+    return alertSpy.mock.calls[0];
+  };
+
+  it.each([
+    ['stay_expired', '기숙사 이용 기간이 만료되었습니다.'],
+    ['not_registered', '배정된 방 정보를 찾을 수 없습니다'],
+    ['no_room', '배정된 방 정보를 찾을 수 없습니다'],
+    ['room_not_found', '배정된 방 정보를 찾을 수 없습니다'],
+    [undefined, '문을 열 수 있는 권한이 없습니다'],
+    ['something_new', '문을 열 수 있는 권한이 없습니다'],
+  ])('권한 거절(%s)은 이유에 맞게 안내하고 로그인 버튼은 없다', async (reason, expected) => {
+    const [title, message, buttons] = await failWith({ status: 'FORBIDDEN', reason });
+
+    expect(title).toBe('실패');
+    expect(message).toContain(expected);
+    expect(buttons).toBeUndefined();
+  });
+
+  it('방 정보가 바뀐 경우(bleid_mismatch)에는 [다시 로그인] 버튼을 함께 보여 준다', async () => {
+    const [, message, buttons] = await failWith({ status: 'FORBIDDEN', reason: 'bleid_mismatch' });
+
+    expect(message).toContain('방 정보가 변경된 것 같습니다');
+    expect(buttons.map((b: any) => b.text)).toEqual(['닫기', '다시 로그인']);
+    expect(onLogout).not.toHaveBeenCalled();
+    buttons[1].onPress();
+    expect(onLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('로그인 정보가 만료됐으면 "로그아웃 후" 같은 안내 대신 [다시 로그인] 버튼을 보여 준다', async () => {
+    const [, message, buttons] = await failWith({ status: 'UNAUTHORIZED' });
+
+    expect(message).toBe('로그인 정보가 만료되었습니다.\n다시 로그인해 주세요.');
+    expect(message).not.toContain('로그아웃');
+    expect(buttons.map((b: any) => b.text)).toEqual(['닫기', '다시 로그인']);
+    buttons[1].onPress();
+    expect(onLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('서버 장애는 권한 문제로 오해하지 않게 서버 문제로 안내한다', async () => {
+    const [, message, buttons] = await failWith({ status: 'SERVER_ERROR' });
+
+    expect(message).toContain('서버에 일시적인 문제가 있습니다');
+    expect(message).not.toContain('권한');
+    expect(buttons).toBeUndefined();
+  });
+
+  it.each([['OFFLINE'], ['RATE_LIMITED'], ['BLE_FAIL'], ['NO_RESPONSE'], ['DOOR_FAIL'], ['ERROR']])(
+    '%s 는 예전처럼 안내만 하고 로그인 버튼은 없다',
+    async status => {
+      const [title, , buttons] = await failWith({ status });
+
+      expect(title).toBe('실패');
+      expect(buttons).toBeUndefined();
+    }
+  );
+});

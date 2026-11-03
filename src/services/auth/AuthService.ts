@@ -3,6 +3,7 @@ import { msalConfig, fullScopes } from './msalConfig';
 import { authorize, refresh } from 'react-native-app-auth';
 import { Buffer } from 'buffer';
 import { AuthStorage, StoredTokens } from './AuthStorage';
+import { isReauthRequiredError } from './authErrors';
 
 export type AuthResult = {
 	accessToken?: string;
@@ -46,6 +47,7 @@ class AuthService {
 			// iOS: accountId를 저장해 silent 시 계정 탐색에 활용
 			try { if ((res as any)?.accountId) { (tokens as any).accountId = (res as any).accountId; } } catch {}
 			try { await AuthStorage.setTokens(tokens as StoredTokens); } catch {}
+			this.reauthRequired = false; // 새로 로그인했다
 			return tokens;
 		} catch (e: any) {
 			throw e;
@@ -74,6 +76,7 @@ class AuthService {
 			expiresOn: (result as any).accessTokenExpirationDate ? new Date((result as any).accessTokenExpirationDate).getTime() : undefined,
 		};
 		try { await AuthStorage.setTokens(tokens as StoredTokens); } catch {}
+		this.reauthRequired = false; // 새로 로그인했다
 		return tokens;
 	}
 
@@ -102,10 +105,51 @@ class AuthService {
 			expiresOn: (result as any).accessTokenExpirationDate ? new Date((result as any).accessTokenExpirationDate).getTime() : undefined,
 		};
 		try { await AuthStorage.setTokens(tokens as StoredTokens); } catch {}
+		this.reauthRequired = false; // 새로 로그인했다
 		return tokens;
 	}
 
-	public async refreshTokens(): Promise<AuthResult> {
+	// 진행 중인 갱신. 자동 로그인과 요청 중 토큰 만료 처리가 동시에 갱신을 요청해도 실제 갱신은 한 번만 한다.
+	private refreshInFlight: Promise<AuthResult> | null = null;
+
+	// 마지막 갱신에서 Azure 가 갱신 토큰을 명확히 거부했는가 (다시 로그인해야 함). 갱신에 성공하거나 새로 로그인하면 false 로 돌아간다.
+	// 네트워크 오류처럼 일시적일 수 있는 실패로는 true 가 되지 않는다.
+	public reauthRequired = false;
+
+	public refreshTokens(): Promise<AuthResult> {
+		if (!this.refreshInFlight) {
+			this.refreshInFlight = this.performRefresh()
+				.then(
+					result => {
+						this.reauthRequired = false;
+						return result;
+					},
+					error => {
+						if (isReauthRequiredError(error)) {
+							this.reauthRequired = true;
+						}
+						throw error;
+					}
+				)
+				.finally(() => {
+					this.refreshInFlight = null;
+				});
+		}
+		return this.refreshInFlight;
+	}
+
+	// 로그아웃(저장된 토큰 삭제)할 때마다 올라가는 번호. 갱신이 끝났을 때 그 사이 로그아웃했는지 알아내는 데 쓴다.
+	private signOutCount = 0;
+
+	private async performRefresh(): Promise<AuthResult> {
+		const signOutCountAtStart = this.signOutCount;
+		// 갱신하는 동안 로그아웃했다면 갱신 결과를 저장하지 않는다 (저장하면 로그아웃이 취소되어 다음 실행 때 자동 로그인된다)
+		const saveRefreshed = async (tokens: AuthResult) => {
+			if (this.signOutCount !== signOutCountAtStart) {
+				throw new Error('Signed out during token refresh');
+			}
+			await AuthStorage.setTokens(tokens as StoredTokens);
+		};
 		// iOS: MSAL 무소음 갱신
 		if (Platform.OS === 'ios' && (NativeModules as any)?.MSALModule?.acquireTokenSilent) {
 			const MSALModule = (NativeModules as any).MSALModule;
@@ -128,7 +172,7 @@ class AuthService {
 				expiresOn: typeof res?.expiresOn === 'number' ? res.expiresOn : undefined,
 			};
 			try { if ((res as any)?.accountId) { (tokens as any).accountId = (res as any).accountId; } } catch {}
-			await AuthStorage.setTokens(tokens as StoredTokens);
+			await saveRefreshed(tokens);
 			return tokens;
 		}
 
@@ -142,7 +186,7 @@ class AuthService {
 			refreshToken: (res as any).refreshToken || stored.refreshToken,
 			expiresOn: (res as any).accessTokenExpirationDate ? new Date((res as any).accessTokenExpirationDate).getTime() : undefined,
 		};
-		await AuthStorage.setTokens(tokens as StoredTokens);
+		await saveRefreshed(tokens);
 		return tokens;
 	}
 
@@ -151,6 +195,8 @@ class AuthService {
 	}
 
 	public async clearStoredTokens(): Promise<void> {
+		this.signOutCount += 1;
+		this.reauthRequired = false;
 		try {
 			if (Platform.OS === 'ios' && (NativeModules as any)?.MSALModule?.signOut) {
 				const MSALModule = (NativeModules as any).MSALModule;

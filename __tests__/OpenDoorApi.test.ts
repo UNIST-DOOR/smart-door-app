@@ -11,7 +11,9 @@ import { hexToBytes } from '../src/utils/helpers';
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock')
 );
-jest.mock('../src/lib/api', () => ({ apiPost: jest.fn() }));
+jest.mock('react-native-device-info', () => ({ getBuildNumber: () => '5' }));
+// 토큰 오류 판단(isTokenFailure)은 실제 코드를 쓰고, 서버 호출(apiPost)만 가짜로 바꾼다
+jest.mock('../src/lib/api', () => ({ ...jest.requireActual('../src/lib/api'), apiPost: jest.fn() }));
 
 const post = apiPost as jest.Mock;
 const PENDING_KEY = 'PENDING_OPEN_RESULTS';
@@ -52,10 +54,30 @@ describe('requestOpenPacket', () => {
     [401, { detail: 'x' }, { kind: 'unauthorized' }],
     [403, { ok: false, reason: 'stay_expired' }, { kind: 'forbidden', reason: 'stay_expired' }],
     [429, { ok: false }, { kind: 'rate_limited' }],
-    [500, { ok: false }, { kind: 'error' }],
+    [500, { ok: false }, { kind: 'server_error' }],
+    [503, { ok: false, error: 'db_unavailable' }, { kind: 'server_error' }],
+    [502, '<html>Bad Gateway</html>', { kind: 'server_error' }],
+    [400, { ok: false, error: 'UPN not found in token' }, { kind: 'error' }],
   ])('상태 %i 를 구분한다', async (status, data, expected) => {
     post.mockResolvedValue({ ok: false, status, data });
     await expect(requestOpenPacket({})).resolves.toEqual(expected);
+  });
+
+  describe('토큰 만료를 "권한 없음"으로 오해하지 않는다', () => {
+    it('예전 서버가 토큰 오류를 403 {"detail"} 로 줘도 unauthorized 다 (이전에는 forbidden 으로 안내됐다)', async () => {
+      post.mockResolvedValue({ ok: false, status: 403, data: { detail: 'Invalid token: Signature has expired' } });
+      await expect(requestOpenPacket({})).resolves.toEqual({ kind: 'unauthorized' });
+    });
+
+    it('토큰이 없다는 403 도 unauthorized', async () => {
+      post.mockResolvedValue({ ok: false, status: 403, data: { detail: 'Token is required' } });
+      await expect(requestOpenPacket({})).resolves.toEqual({ kind: 'unauthorized' });
+    });
+
+    it('진짜 권한 거절(403 {"error":"forbidden"})은 reason 과 함께 forbidden 이다', async () => {
+      post.mockResolvedValue({ ok: false, status: 403, data: { ok: false, error: 'forbidden', reason: 'bleid_mismatch' } });
+      await expect(requestOpenPacket({})).resolves.toEqual({ kind: 'forbidden', reason: 'bleid_mismatch' });
+    });
   });
 
   it('통신 불가면 offline', async () => {

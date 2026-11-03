@@ -22,6 +22,7 @@ export type OpenOutcome =
   | { status: 'FORBIDDEN'; reason?: string } // 권한 없음 (403)
   | { status: 'RATE_LIMITED' }
   | { status: 'OFFLINE' } // 서버에서 패킷을 받아야 하므로 오프라인에서는 열 수 없음
+  | { status: 'SERVER_ERROR' } // 서버 장애 (5xx)
   | { status: 'PERMISSION_DENIED' } // 앱의 블루투스(안드로이드는 위치 포함) 권한이 없음
   | { status: 'BLUETOOTH_OFF' } // 블루투스가 꺼져 있음
   | { status: 'BLE_FAIL' } // 스캔·연결·전송 실패
@@ -41,6 +42,8 @@ const issueFailureToOutcome = (issued: Exclude<OpenPacketResponse, { kind: 'ok' 
       return { status: 'RATE_LIMITED' };
     case 'offline':
       return { status: 'OFFLINE' };
+    case 'server_error':
+      return { status: 'SERVER_ERROR' };
     default:
       return { status: 'ERROR' };
   }

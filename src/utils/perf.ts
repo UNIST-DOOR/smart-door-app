@@ -26,6 +26,13 @@ export const perfLog = (stage: string): void => {
   }
 };
 
+/** 로그인 토큰 갱신 과정 (개발 모드 전용). 토큰 값은 남기지 않는다. 보는 법은 위와 같다. */
+export const authLog = (message: string): void => {
+  if (enabled()) {
+    console.log(`[AUTH] ${message}`);
+  }
+};
+
 /** BLE 오류 원문 (연결 실패 원인 진단용, 개발 모드 전용). 안드로이드 GATT 오류 코드(예: 133)를 함께 보여준다. */
 export const bleErrorLog = (where: string, error: any): void => {
   if (enabled()) {

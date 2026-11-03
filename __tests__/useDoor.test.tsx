@@ -214,6 +214,23 @@ describe('useDoor.openRoomDoor 서버 호출과 BLE 연결 동시 진행', () =>
     expect(mockSendPacket).toHaveBeenCalledTimes(2);
   });
 
+  it('서버 장애(5xx)는 SERVER_ERROR 로 알리고 진행 중인 스캔·연결을 중단한다', async () => {
+    const ble = makeBle();
+    const connect = deferred<boolean>();
+    ble.scanAndAutoConnect.mockReturnValue(connect.promise);
+    ble.cancelConnect.mockImplementation(() => connect.resolve(false));
+    issueMock.mockResolvedValue({ kind: 'server_error' });
+    await mount(ble);
+
+    const { promise: outcome } = await start({ bleid: '301201' });
+    await advance(100);
+
+    await expect(outcome).resolves.toEqual({ status: 'SERVER_ERROR' });
+    expect(ble.cancelConnect).toHaveBeenCalledTimes(1);
+    expect(mockSendPacket).not.toHaveBeenCalled();
+    expect(reportMock).not.toHaveBeenCalled();
+  });
+
   describe('블루투스를 쓸 수 없을 때 이유별 결과', () => {
     it.each([
       ['PERMISSION', { status: 'PERMISSION_DENIED' }],

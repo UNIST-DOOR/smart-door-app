@@ -90,19 +90,37 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
     // clearLogs,
   } = useDoor(bleService);
 
+  // 다시 로그인해야 해결되는 실패인가 (로그인 정보 만료, 방 정보가 바뀐 경우)
+  const needsRelogin = (outcome: OpenOutcome): boolean =>
+    outcome.status === 'UNAUTHORIZED' || (outcome.status === 'FORBIDDEN' && outcome.reason === 'bleid_mismatch');
+
   // 방 문 열기 실패 사유별 안내 문구
   const openFailureMessage = (outcome: OpenOutcome): string => {
     switch (outcome.status) {
       case 'FORBIDDEN':
-        return outcome.reason === 'stay_expired'
-          ? '기숙사 이용 기간이 만료되었습니다.'
-          : '문을 열 수 있는 권한이 없습니다.\n관리사무소에 문의해 주세요.';
+        // 서버가 알려 주는 이유별로 학생이 무엇을 하면 되는지 안내한다
+        switch (outcome.reason) {
+          case 'stay_expired':
+            return '기숙사 이용 기간이 만료되었습니다.';
+          case 'bleid_mismatch':
+            // 앱이 가진 방 정보가 서버의 최신 배정과 다르다 (방이 바뀐 경우). 다시 로그인하면 최신 정보로 바뀐다.
+            return '방 정보가 변경된 것 같습니다.\n다시 로그인하면 최신 방 정보로 바뀝니다.';
+          case 'not_registered':
+          case 'no_room':
+          case 'room_not_found':
+            return '배정된 방 정보를 찾을 수 없습니다.\n관리사무소에 문의해 주세요.';
+          default:
+            return '문을 열 수 있는 권한이 없습니다.\n관리사무소에 문의해 주세요.';
+        }
       case 'RATE_LIMITED':
         return '요청이 너무 많습니다.\n잠시 후 다시 시도해주세요.';
       case 'OFFLINE':
         return '서버와 통신하지 못했습니다.\n잠시 후 다시 시도해 주세요.\n계속되면 관리자에게 문의해 주세요.';
+      case 'SERVER_ERROR':
+        // 서버에 연결은 됐지만 서버가 문제를 일으켰다 (DB 연결 문제 등). 학생이 할 수 있는 건 잠시 뒤 다시 시도하는 것이다.
+        return '서버에 일시적인 문제가 있습니다.\n잠시 후 다시 시도해 주세요.\n계속되면 관리자에게 문의해 주세요.';
       case 'UNAUTHORIZED':
-        return '로그인이 만료되었습니다.\n로그아웃 후 다시 로그인해 주세요.';
+        return '로그인 정보가 만료되었습니다.\n다시 로그인해 주세요.';
       case 'PERMISSION_DENIED':
         return BLUETOOTH_PERMISSION_MESSAGE;
       case 'BLUETOOTH_OFF':
@@ -292,6 +310,17 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         showUpgradeAlert();
       } else if (outcome.status === 'PERMISSION_DENIED') {
         showPermissionAlert();
+      } else if (needsRelogin(outcome)) {
+        // 다시 로그인해야 해결되는 경우에는 안내 창에서 바로 다시 로그인할 수 있게 한다
+        Alert.alert('실패', openFailureMessage(outcome), [
+          { text: '닫기', style: 'cancel' },
+          {
+            text: '다시 로그인',
+            onPress: () => {
+              onLogout();
+            },
+          },
+        ]);
       } else {
         Alert.alert('실패', openFailureMessage(outcome));
       }

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { View, Image, Text, TouchableOpacity, StatusBar, Alert, Linking } from 'react-native';
 import { styles, COLORS } from './AzureLoginScreen.styles';
 import AuthService from '../../services/auth/AuthService';
-import { apiGet, setAuthToken } from '../../lib/api';
+import { checkSession } from '../../services/auth/session';
+import { describeLoginError, noRoomMessage } from '../../services/auth/loginMessages';
+import { setAuthToken } from '../../lib/api';
 
 interface UserInfo {
   username: string;
@@ -19,9 +21,20 @@ interface UserInfo {
 interface Props {
 	onSuccess: (user: UserInfo) => void;
 	isAutoLoginInProgress?: boolean;
+	// 사용자가 직접 로그인하는 중인지 알린다. (이때 앱이 자동 로그인을 다시 시도해서 겹치지 않게 하기 위함)
+	onBusyChange?: (busy: boolean) => void;
+	// 왜 로그인 화면이 나왔는지(로그인 정보 만료, 자동 로그인 실패 등) 알리는 안내. retry 가 true 면 "다시 시도" 버튼을 함께 보여 준다.
+	notice?: { message: string; retry?: boolean } | null;
+	onRetry?: () => void;
 }
 
-export const AzureLoginScreen: React.FC<Props> = ({ onSuccess, isAutoLoginInProgress = false }) => {
+export const AzureLoginScreen: React.FC<Props> = ({
+	onSuccess,
+	isAutoLoginInProgress = false,
+	onBusyChange,
+	notice,
+	onRetry,
+}) => {
 	const [loading, setLoading] = useState(false);
 
 	// 공통: 스토어 열기 + 업그레이드 안내 (Play 스토어 앱 우선, 불가 시 웹)
@@ -55,57 +68,42 @@ export const AzureLoginScreen: React.FC<Props> = ({ onSuccess, isAutoLoginInProg
 	const handleLogin = async () => {
 		if (loading || isAutoLoginInProgress) return;
 		setLoading(true);
+		onBusyChange?.(true);
 		try {
 			const result = await AuthService.signInInteractive();
 			// 토큰 설정 후 사용자 및 방 정보 조회
-			setAuthToken(result.accessToken ?? null);
-			try {
-			const unwrap = (res: any) => (res && typeof res === 'object' && 'data' in res ? (res as any).data : res);
-			const meRes = await apiGet('/api/me/');
-			const roomInfoRes = await apiGet('/api/room-info/');
-			const me = unwrap(meRes);
-			const roomInfo = unwrap(roomInfoRes);
-			if (!roomInfo?.ok || !roomInfo?.found) {
-				if (roomInfo?.error === 'upgrade_required') {
+			setAuthToken(result.accessToken ?? null, result.expiresOn);
+			const check = await checkSession();
+			switch (check.kind) {
+				case 'ok':
+					// try { Alert.alert(`환영합니다. ${check.user.building}동 ${check.user.room}호 \n${check.user.name}님`); } catch {}
+					onSuccess(check.user);
+					break;
+				case 'upgrade_required':
 					showUpgradeAlert();
 					// 업그레이드 필요 시에도 토큰 삭제
 					await AuthService.clearStoredTokens();
-					return;
-				}
-				// 방 정보 조회 실패 시 저장된 토큰 삭제
-				Alert.alert('권한 없음', '방 정보가 조회되지 않았습니다. 관리자에게 문의하세요.');
-				await AuthService.clearStoredTokens();
-				return;
-			}
-				const user: UserInfo = {
-					username: String(roomInfo?.upn || ''),
-					name: String(me?.name || ''),
-					building: String(roomInfo?.building || ''),
-					room: String(roomInfo?.room || ''),
-					bleId: roomInfo?.bleId ? String(roomInfo.bleId) : undefined,
-					checkInDate: roomInfo?.checkInDate ? String(roomInfo.checkInDate) : undefined,
-					checkInTime: roomInfo?.checkInTime ? String(roomInfo.checkInTime) : undefined,
-					checkOutDate: roomInfo?.checkOutDate ? String(roomInfo.checkOutDate) : undefined,
-					checkOutTime: roomInfo?.checkOutTime ? String(roomInfo.checkOutTime) : undefined,
-				};
-				// try { Alert.alert(`환영합니다. ${user.building}동 ${user.room}호 \n${user.name}님`); } catch {}
-				onSuccess(user);
-			} catch (callErr: any) {
-				Alert.alert('백엔드 호출 실패', callErr?.message ?? '네트워크 오류');
+					break;
+				case 'no_room':
+					// 서버가 방 정보가 없다고 명확히 답한 경우만 안내하고 토큰을 삭제한다. 이유(학생 정보 없음, 방 배정 없음 등)를 구분해서 알린다.
+					Alert.alert('로그인할 수 없음', noRoomMessage(check.reason));
+					await AuthService.clearStoredTokens();
+					break;
+				case 'token_rejected':
+					Alert.alert('로그인 실패', '로그인 정보를 확인하지 못했습니다.\n다시 시도해 주세요.');
+					await AuthService.clearStoredTokens();
+					break;
+				default:
+					// 서버나 네트워크 문제. 로그인은 되었으니 토큰은 지우지 않고(다음에 자동 로그인된다) 다시 시도하도록 안내한다.
+					Alert.alert('서버 연결 실패', '서버에서 방 정보를 가져오지 못했습니다.\n잠시 후 다시 시도해 주세요.');
 			}
 		} catch (e: any) {
-			try {
-				const raw = String(e?.error || e?.message || '');
-				if (/access_denied|cancel/i.test(raw)) {
-					Alert.alert('로그인 취소', '로그인이 취소되었습니다.');
-					return;
-				}
-				Alert.alert('로그인 실패', '로그인 중 오류가 발생했습니다.\n다시 시도해 주세요.');
-			} catch {
-				Alert.alert('로그인 실패', '로그인 중 오류가 발생했습니다.\n다시 시도해 주세요.');
-			}
+			// 취소, 네트워크, 브라우저 없음, 그 밖의 오류(지원용 오류 코드 포함)를 구분해서 안내한다
+			const info = describeLoginError(e);
+			Alert.alert(info.title, info.message);
 		} finally {
 			setLoading(false);
+			onBusyChange?.(false);
 		}
 	};
 
@@ -177,6 +175,21 @@ export const AzureLoginScreen: React.FC<Props> = ({ onSuccess, isAutoLoginInProg
 				<Image source={require('../../assets/wordmark_logo.jpg')} style={styles.logo} resizeMode="contain" />
 				<Text style={styles.title}>UNIST Smart Door</Text>
 				<Text style={styles.subtitle}>간편하게 로그인하고 서비스를 이용해보세요.</Text>
+
+				{notice ? (
+					<View style={styles.notice}>
+						<Text style={styles.noticeText}>{notice.message}</Text>
+						{notice.retry && onRetry ? (
+							<TouchableOpacity
+								style={[styles.noticeButton, (loading || isAutoLoginInProgress) && styles.loginButtonDisabled]}
+								onPress={onRetry}
+								disabled={loading || isAutoLoginInProgress}
+							>
+								<Text style={styles.noticeButtonText}>{isAutoLoginInProgress ? '시도 중...' : '다시 시도'}</Text>
+							</TouchableOpacity>
+						) : null}
+					</View>
+				) : null}
 
 				<TouchableOpacity 
 					style={[styles.loginButton, (loading || isAutoLoginInProgress) && styles.loginButtonDisabled]} 
