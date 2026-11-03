@@ -223,13 +223,78 @@ describe('BleService 블루투스 사용 불가 이유 구분', () => {
     expect(service.lastInitFailure).toBeNull();
   });
 
-  it('initialize: 안드로이드에서 권한을 거부하면 PERMISSION 으로 기록한다', async () => {
-    jest.replaceProperty(Platform, 'OS', 'android');
-    jest.spyOn(Platform, 'Version', 'get').mockReturnValue(34);
-    jest.spyOn(PermissionsAndroid, 'request').mockResolvedValue('never_ask_again' as any);
-    const service = new BleService();
-    await expect(service.initialize()).resolves.toBe(false);
-    expect(service.lastInitFailure).toBe('PERMISSION');
-    expect(mockManager.state).not.toHaveBeenCalled(); // 권한이 없으면 상태 확인까지 가지 않는다 (기존 동작)
+  describe('안드로이드 권한 요청', () => {
+    const SCAN = 'android.permission.BLUETOOTH_SCAN';
+    const CONNECT = 'android.permission.BLUETOOTH_CONNECT';
+    const LOCATION = 'android.permission.ACCESS_FINE_LOCATION';
+
+    const asAndroid = (version: number) => {
+      jest.replaceProperty(Platform, 'OS', 'android');
+      jest.spyOn(Platform, 'Version', 'get').mockReturnValue(version);
+      return {
+        multiple: jest.spyOn(PermissionsAndroid, 'requestMultiple'),
+        single: jest.spyOn(PermissionsAndroid, 'request'),
+      };
+    };
+
+    it('Android 12 이상: 근처 기기 권한만 한 번에 요청하고 위치 권한은 요청하지 않는다', async () => {
+      const { multiple, single } = asAndroid(34);
+      multiple.mockResolvedValue({ [SCAN]: 'granted', [CONNECT]: 'granted' } as any);
+      mockManager.state.mockResolvedValue('PoweredOn');
+      const service = new BleService();
+
+      await expect(service.initialize()).resolves.toBe(true);
+
+      expect(multiple).toHaveBeenCalledTimes(1);
+      expect(multiple).toHaveBeenCalledWith([SCAN, CONNECT]);
+      expect(single).not.toHaveBeenCalled(); // 위치 권한 요청 없음
+      expect(service.lastInitFailure).toBeNull();
+    });
+
+    it('Android 12 이상: 설명 창(rationale)을 쓰지 않는다', async () => {
+      const { multiple } = asAndroid(34);
+      multiple.mockResolvedValue({ [SCAN]: 'granted', [CONNECT]: 'granted' } as any);
+      mockManager.state.mockResolvedValue('PoweredOn');
+
+      await new BleService().initialize();
+
+      expect(multiple.mock.calls[0]).toHaveLength(1); // 권한 목록만 전달
+    });
+
+    it.each([
+      ['스캔만 거부', { [SCAN]: 'denied', [CONNECT]: 'granted' }],
+      ['연결만 거부', { [SCAN]: 'granted', [CONNECT]: 'denied' }],
+      ['다시 묻지 않음', { [SCAN]: 'never_ask_again', [CONNECT]: 'never_ask_again' }],
+    ])('Android 12 이상: %s 이면 PERMISSION 으로 기록하고 상태 확인까지 가지 않는다', async (_name, result) => {
+      const { multiple } = asAndroid(34);
+      multiple.mockResolvedValue(result as any);
+      const service = new BleService();
+
+      await expect(service.initialize()).resolves.toBe(false);
+
+      expect(service.lastInitFailure).toBe('PERMISSION');
+      expect(mockManager.state).not.toHaveBeenCalled();
+    });
+
+    it('Android 11 이하: 위치 권한만 요청한다 (이 버전은 BLE 스캔에 위치 권한이 필요하다)', async () => {
+      const { multiple, single } = asAndroid(30);
+      single.mockResolvedValue('granted' as any);
+      mockManager.state.mockResolvedValue('PoweredOn');
+
+      await expect(new BleService().initialize()).resolves.toBe(true);
+
+      expect(single).toHaveBeenCalledTimes(1);
+      expect(single).toHaveBeenCalledWith(LOCATION);
+      expect(multiple).not.toHaveBeenCalled();
+    });
+
+    it('Android 11 이하: 위치 권한을 거부하면 PERMISSION 으로 기록한다', async () => {
+      const { single } = asAndroid(30);
+      single.mockResolvedValue('denied' as any);
+      const service = new BleService();
+
+      await expect(service.initialize()).resolves.toBe(false);
+      expect(service.lastInitFailure).toBe('PERMISSION');
+    });
   });
 });

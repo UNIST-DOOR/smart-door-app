@@ -27,7 +27,9 @@ const BLUETOOTH_OFF_MESSAGE = '블루투스가 꺼져 있습니다.\n설정에�
 const BLUETOOTH_PERMISSION_MESSAGE =
   Platform.OS === 'ios'
     ? '도어락을 열려면 이 앱의 블루투스 사용을 허용해야 합니다.\n설정에서 블루투스를 켜 주세요.'
-    : "도어락을 열려면 권한이 필요합니다.\n설정의 권한에서 '근처 기기'와 '위치'를 허용해 주세요.";
+    : Number(Platform.Version) >= 31
+    ? "도어락을 열려면 권한이 필요합니다.\n설정의 권한에서 '근처 기기'를 허용해 주세요."
+    : "도어락을 열려면 권한이 필요합니다.\n설정의 권한에서 '위치'를 허용해 주세요.";
 
 interface DoorControlScreenProps {
   onLogout: () => void;

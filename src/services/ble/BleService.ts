@@ -51,6 +51,10 @@ class BleService {
 
   /**
    * Android용 BLE 권한 요청
+   *  - Android 12+ : '근처 기기'(BLUETOOTH_SCAN, BLUETOOTH_CONNECT) 권한만 필요하다.
+   *    매니페스트의 BLUETOOTH_SCAN 에 neverForLocation 이 있어 위치 권한은 필요 없다.
+   *  - Android 11 이하: BLE 스캔에 위치 권한이 필요하다.
+   * 거부했을 때의 안내는 화면에서 한다. (RN 이 다시 요청할 때 띄우는 영어 설명 창은 쓰지 않는다)
    */
   async requestBlePermissions(): Promise<boolean> {
     if (Platform.OS !== 'android') {
@@ -58,51 +62,28 @@ class BleService {
     }
 
     try {
-      // Android 12+ 새로운 권한들
       if (Platform.Version >= 31) {
-        const bluetoothScanGranted = await PermissionsAndroid.request(
+        // 스캔과 연결은 같은 권한 그룹(근처 기기)이라 함께 요청하면 시스템 창이 한 번만 뜬다
+        const results = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
-          {
-            title: 'Bluetooth Scan Permission',
-            message: 'BLE 스캔을 위해 블루투스 권한이 필요합니다.',
-            buttonNegative: '취소',
-            buttonPositive: '확인',
-          }
-        );
-
-        const bluetoothConnectGranted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
-          {
-            title: 'Bluetooth Connect Permission',
-            message: 'BLE 연결을 위해 블루투스 권한이 필요합니다.',
-            buttonNegative: '취소',
-            buttonPositive: '확인',
-          }
-        );
-
-        if (bluetoothScanGranted !== PermissionsAndroid.RESULTS.GRANTED ||
-            bluetoothConnectGranted !== PermissionsAndroid.RESULTS.GRANTED) {
+        ]);
+        const granted =
+          results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN] === PermissionsAndroid.RESULTS.GRANTED &&
+          results[PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT] === PermissionsAndroid.RESULTS.GRANTED;
+        if (!granted) {
           this.onError?.('블루투스 권한이 거부되었습니다');
           return false;
         }
+        return true;
       }
 
-      // 위치 권한 (모든 Android 버전)
-      const locationGranted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-        {
-          title: 'Location Permission',
-          message: 'BLE 스캔을 위해 위치 권한이 필요합니다.',
-          buttonNegative: '취소',
-          buttonPositive: '확인',
-        }
-      );
-
+      // Android 11 이하: 위치 권한
+      const locationGranted = await PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
       if (locationGranted !== PermissionsAndroid.RESULTS.GRANTED) {
         this.onError?.('위치 권한이 거부되었습니다. BLE 스캔을 위해 필요합니다.');
         return false;
       }
-
       return true;
     } catch (error) {
       this.onError?.(`권한 요청 실패: ${error}`);
