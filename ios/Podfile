@@ -46,9 +46,22 @@ target 'SmartDoorManager' do
       # :ccache_enabled => true
     )
 
+    # Pods 프로젝트 자체의 최소 iOS 버전도 앱과 맞춘다 (최신 Xcode 는 9.0 같은 낮은 값을 거부함)
+    installer.pods_project.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+    end
+
     # Ensure dSYM is generated for Release (fix App Store Connect dSYM check)
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
+        if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 15.1
+          config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+        end
+        # fmt 11.0.2 는 C++20 에서 consteval 을 켜는데, 최신 Xcode 컴파일러가 이를 거부한다.
+        # fmt 만 C++17 로 컴파일하면 consteval 이 꺼진다 (헤더가 FMT_USE_CONSTEVAL 을 직접 정의하므로 매크로로는 못 끈다).
+        if target.name == 'fmt'
+          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+        end
         if config.name == 'Release'
           config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
           config.build_settings['STRIP_INSTALLED_PRODUCT'] = 'NO'
