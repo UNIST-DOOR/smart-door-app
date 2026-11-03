@@ -1,6 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { apiPost } from '../src/lib/api';
-import { flushPendingResults, reportOpenResult, requestOpenPacket } from '../src/services/door/OpenDoorApi';
+import {
+  OPEN_PACKET_TIMEOUT_MS,
+  flushPendingResults,
+  reportOpenResult,
+  requestOpenPacket,
+} from '../src/services/door/OpenDoorApi';
 import { hexToBytes } from '../src/utils/helpers';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
@@ -56,6 +61,36 @@ describe('requestOpenPacket', () => {
   it('통신 불가면 offline', async () => {
     post.mockRejectedValue(new Error('Network request failed'));
     await expect(requestOpenPacket({})).resolves.toEqual({ kind: 'offline' });
+  });
+
+  it('서버가 제한 시간 안에 응답하지 않으면 offline 으로 끝낸다', async () => {
+    jest.useFakeTimers();
+    try {
+      post.mockReturnValue(new Promise(() => {})); // 영원히 응답하지 않는 서버
+      const result = requestOpenPacket({});
+      await jest.advanceTimersByTimeAsync(OPEN_PACKET_TIMEOUT_MS - 1);
+      let settled = false;
+      result.then(() => {
+        settled = true;
+      });
+      await Promise.resolve();
+      expect(settled).toBe(false); // 제한 시간 직전까지는 기다린다
+      await jest.advanceTimersByTimeAsync(1);
+      await expect(result).resolves.toEqual({ kind: 'offline' });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('제한 시간 안에 응답하면 타이머를 남기지 않는다', async () => {
+    jest.useFakeTimers();
+    try {
+      post.mockResolvedValue({ ok: false, status: 403, data: { reason: 'no_room' } });
+      await expect(requestOpenPacket({})).resolves.toEqual({ kind: 'forbidden', reason: 'no_room' });
+      expect(jest.getTimerCount()).toBe(0);
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('packetHex 가 잘못되면 error', async () => {

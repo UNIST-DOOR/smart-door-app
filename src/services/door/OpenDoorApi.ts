@@ -17,15 +17,29 @@ export type OpenPacketResponse =
   | { kind: 'offline' } // 서버에 연결할 수 없음
   | { kind: 'error' };
 
+/** 서버가 이 시간 안에 응답하지 않으면 통신 불가로 보고 문 열기를 중단한다. */
+export const OPEN_PACKET_TIMEOUT_MS = 8000;
+
 export const requestOpenPacket = async (params: {
   bleid?: string;
   retryOf?: string;
 }): Promise<OpenPacketResponse> => {
   let res;
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    res = await apiPost('/api/door/open-packet/', { bleid: params.bleid, retryOf: params.retryOf });
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error('open-packet timeout')), OPEN_PACKET_TIMEOUT_MS);
+    });
+    res = await Promise.race([
+      apiPost('/api/door/open-packet/', { bleid: params.bleid, retryOf: params.retryOf }),
+      timeout,
+    ]);
   } catch {
     return { kind: 'offline' };
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
   }
 
   switch (res.status) {
