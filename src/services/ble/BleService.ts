@@ -585,19 +585,25 @@ class BleService {
   }
 
   /**
-   * 연결된 기기에 MTU 를 요청하고 협상된 MTU 를 돌려준다. (Android 전용, 실패/미지원이면 null)
-   * 패킷을 한 번에 쓰려면 MTU >= 패킷 길이 + 3 이어야 한다.
+   * 연결된 기기의 MTU 를 돌려준다. 실패하면 null.
+   * - Android: MTU 를 요청해서 협상한다.
+   * - iOS: MTU 는 연결 때 자동 협상되므로 요청은 효과가 없고, 협상된 값을 읽어 온다.
+   * 패킷을 한 번에 쓰려면 MTU >= 패킷 길이 + 3 이어야 한다. (모자라면 호출한 쪽에서 1바이트씩 쓴다)
    */
   async requestMtu(mtu: number): Promise<number | null> {
-    if (Platform.OS !== 'android' || !this.connectedDevice) {
+    const device = this.connectedDevice;
+    if (!device) {
       return null;
     }
     try {
-      const updated = await this.connectedDevice.requestMTU(mtu);
-      return typeof updated?.mtu === 'number' ? updated.mtu : null;
+      const updated = await device.requestMTU(mtu);
+      if (typeof updated?.mtu === 'number') {
+        return updated.mtu;
+      }
     } catch {
-      return null;
+      // 아래에서 연결 시점에 기록된 값을 시도한다
     }
+    return Platform.OS === 'ios' && typeof device.mtu === 'number' ? device.mtu : null;
   }
 
   /**
