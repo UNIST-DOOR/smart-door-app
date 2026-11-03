@@ -162,10 +162,12 @@ export const useDoor = (bleService: BleService | null) => {
         // 실패 원인 코드(예: connect:E133, connect:SCAN_TIMEOUT)를 함께 남긴다 (STAGE 는 20자 이내)
         stage = `connect${bleService.lastConnectError ? `:${bleService.lastConnectError}` : ''}`.slice(0, 20);
       } else {
-        // 패킷을 한 번에 쓸 수 있는지(MTU) 확인. 부족하면 1바이트씩 쓴다.
-        const bulk = conn.mtu !== null && conn.mtu >= issued.packet.length + 3;
+        // 한 번에 쓰는 것은 서명 패킷일 때만이다. 서명을 하지 않는 문(서버에 이 객실의 ble_auth_door 값이 없는 경우)은
+        // 예전 도어락 모듈이라 패킷을 한 번에 받지 못한다. 예전 앱처럼 1바이트씩 쓴다.
+        // 서명 패킷이어도 MTU 가 모자라면(패킷 길이 + 3 미만) 1바이트씩 쓴다.
+        const bulk = issued.signed && conn.mtu !== null && conn.mtu >= issued.packet.length + 3;
         if (APP_CONFIG.BULK_WRITE) {
-          perfLog(`패킷 쓰기 방식: ${bulk ? '한 번에 쓰기' : '1바이트씩 쓰기'}`);
+          perfLog(`패킷 쓰기 방식: ${bulk ? '한 번에 쓰기' : issued.signed ? '1바이트씩 쓰기 (MTU 부족)' : '1바이트씩 쓰기 (서명 없는 문)'}`);
         }
 
         // 연결 후 고정 대기. 서버 응답을 기다린 시간도 여기에 포함되므로 연결 후 1초보다 짧아지지는 않는다.

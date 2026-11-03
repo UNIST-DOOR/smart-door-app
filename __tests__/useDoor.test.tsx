@@ -214,6 +214,52 @@ describe('useDoor.openRoomDoor 서버 호출과 BLE 연결 동시 진행', () =>
     expect(mockSendPacket).toHaveBeenCalledTimes(2);
   });
 
+  describe('패킷을 쓰는 방식 (서명 패킷만 한 번에, 나머지는 예전처럼 1바이트씩)', () => {
+    const openOnce = async (issue: object, mtu: number) => {
+      const ble = makeBle();
+      ble.requestMtu.mockResolvedValue(mtu);
+      ble.scanAndAutoConnect.mockResolvedValue(true);
+      issueMock.mockResolvedValue(issue);
+      await mount(ble);
+      const { promise } = await start({ bleid: '301201' });
+      await advance(3000);
+      await promise;
+    };
+
+    it('서명 패킷이고 MTU 가 충분하면 한 번에 쓴다', async () => {
+      await openOnce(okIssue({ signed: true, packet: new Array(54).fill(1) }), 247);
+      expect(mockSendPacket).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ bulk: true }));
+    });
+
+    it('서명 없는 패킷(예전 도어락 모듈)은 MTU 가 충분해도 1바이트씩 쓴다', async () => {
+      await openOnce(okIssue({ signed: false, packet: new Array(30).fill(1) }), 247);
+      expect(mockSendPacket).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ bulk: false }));
+    });
+
+    it('서명 패킷이어도 MTU 가 모자라면 1바이트씩 쓴다', async () => {
+      await openOnce(okIssue({ signed: true, packet: new Array(54).fill(1) }), 23);
+      expect(mockSendPacket).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ bulk: false }));
+    });
+
+    it('MTU 를 알 수 없어도 1바이트씩 쓴다', async () => {
+      const ble = makeBle();
+      ble.requestMtu.mockResolvedValue(null);
+      ble.scanAndAutoConnect.mockResolvedValue(true);
+      issueMock.mockResolvedValue(okIssue({ signed: true, packet: new Array(54).fill(1) }));
+      await mount(ble);
+      const { promise } = await start({ bleid: '301201' });
+      await advance(3000);
+      await promise;
+      expect(mockSendPacket).toHaveBeenCalledWith(expect.any(Array), expect.objectContaining({ bulk: false }));
+    });
+
+    it('서명 없는 문의 패킷 내용은 서버가 준 그대로 보낸다 (앱이 고치거나 서명하지 않는다)', async () => {
+      const original = [0xcc, 0x01, 0x2f];
+      await openOnce(okIssue({ signed: false, packet: original }), 247);
+      expect(mockSendPacket).toHaveBeenCalledWith(original, expect.anything());
+    });
+  });
+
   it('서버 장애(5xx)는 SERVER_ERROR 로 알리고 진행 중인 스캔·연결을 중단한다', async () => {
     const ble = makeBle();
     const connect = deferred<boolean>();
