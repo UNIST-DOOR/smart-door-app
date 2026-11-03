@@ -1,3 +1,4 @@
+import { PermissionsAndroid, Platform } from 'react-native';
 import BleService from '../src/services/ble/BleService';
 import { BLE_UUIDS } from '../src/utils/constants';
 
@@ -169,5 +170,66 @@ describe('BleService 연결 안정성', () => {
     await assertion;
     expect(service.lastConnectError).toBe('SCAN_TIMEOUT');
     expect(mockManager.connectToDevice).not.toHaveBeenCalled();
+  });
+});
+
+describe('BleService 블루투스 사용 불가 이유 구분', () => {
+  beforeEach(() => {
+    Object.values(mockManager).forEach(fn => fn.mockReset());
+  });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it.each([
+    ['PoweredOn', 'NONE'],
+    ['PoweredOff', 'POWERED_OFF'],
+    ['Unauthorized', 'PERMISSION'],
+    ['Unsupported', 'POWERED_OFF'],
+  ])('블루투스 상태 %s 는 %s', async (state, expected) => {
+    mockManager.state.mockResolvedValue(state);
+    await expect(new BleService().getBluetoothIssue()).resolves.toBe(expected);
+  });
+
+  it('상태를 읽지 못하면 쓸 수 없는 것으로 본다 (기존 isBluetoothPoweredOn 과 같은 기준)', async () => {
+    mockManager.state.mockRejectedValue(new Error('boom'));
+    const service = new BleService();
+    await expect(service.getBluetoothIssue()).resolves.toBe('POWERED_OFF');
+    await expect(service.isBluetoothPoweredOn()).resolves.toBe(false);
+  });
+
+  it('initialize: 블루투스가 꺼져 있으면 POWERED_OFF 로 기록한다', async () => {
+    mockManager.state.mockResolvedValue('PoweredOff');
+    const service = new BleService();
+    await expect(service.initialize()).resolves.toBe(false);
+    expect(service.lastInitFailure).toBe('POWERED_OFF');
+  });
+
+  it('initialize: 앱 권한이 꺼져 있으면(iOS Unauthorized) PERMISSION 으로 기록한다', async () => {
+    mockManager.state.mockResolvedValue('Unauthorized');
+    const service = new BleService();
+    await expect(service.initialize()).resolves.toBe(false);
+    expect(service.lastInitFailure).toBe('PERMISSION');
+  });
+
+  it('initialize: 성공하면 이전 실패 이유가 지워진다', async () => {
+    const service = new BleService();
+    mockManager.state.mockResolvedValue('PoweredOff');
+    await service.initialize();
+    expect(service.lastInitFailure).toBe('POWERED_OFF');
+
+    mockManager.state.mockResolvedValue('PoweredOn');
+    await expect(service.initialize()).resolves.toBe(true);
+    expect(service.lastInitFailure).toBeNull();
+  });
+
+  it('initialize: 안드로이드에서 권한을 거부하면 PERMISSION 으로 기록한다', async () => {
+    jest.replaceProperty(Platform, 'OS', 'android');
+    jest.spyOn(Platform, 'Version', 'get').mockReturnValue(34);
+    jest.spyOn(PermissionsAndroid, 'request').mockResolvedValue('never_ask_again' as any);
+    const service = new BleService();
+    await expect(service.initialize()).resolves.toBe(false);
+    expect(service.lastInitFailure).toBe('PERMISSION');
+    expect(mockManager.state).not.toHaveBeenCalled(); // 권한이 없으면 상태 확인까지 가지 않는다 (기존 동작)
   });
 });

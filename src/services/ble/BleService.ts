@@ -17,12 +17,20 @@ const describeBleError = (error: any): string => {
   return code !== undefined && code !== null ? `E${code}` : 'E?';
 };
 
+// initialize() 가 실패한 이유. 화면에서 "권한을 허용해 주세요"와 "블루투스를 켜 주세요"를 구분해 안내하는 데 쓴다.
+export type BleInitFailure = 'PERMISSION' | 'POWERED_OFF';
+// 지금 블루투스를 쓸 수 있는 상태인지 (NONE = 쓸 수 있음)
+export type BluetoothIssue = 'NONE' | 'PERMISSION' | 'POWERED_OFF';
+
 class BleService {
   private manager: BleManager;
   private connectedDevice: Device | null = null;
   private commandCharacteristic: Characteristic | null = null;
   private notifyCharacteristic: Characteristic | null = null;
-  
+
+  // 마지막 initialize() 실패 이유. 성공했거나 원인을 알 수 없으면 null. initialize() 를 부를 때마다 초기화된다.
+  public lastInitFailure: BleInitFailure | null = null;
+
   // 마지막 연결 실패 원인 (예: E133, SCAN_TIMEOUT, NO_SERVICE). 서버 로그(stage)와 진단용
   public lastConnectError: string | null = null;
 
@@ -106,15 +114,19 @@ class BleService {
    * BLE 매니저 초기화 및 권한 확인
    */
   async initialize(): Promise<boolean> {
+    this.lastInitFailure = null;
     try {
       // 권한 요청
       const permissionsGranted = await this.requestBlePermissions();
       if (!permissionsGranted) {
+        this.lastInitFailure = 'PERMISSION';
         return false;
       }
 
       const state = await this.manager.state();
       if (state !== 'PoweredOn') {
+        // iOS 는 앱의 블루투스 권한이 꺼져 있으면 'Unauthorized' 가 온다. 블루투스 자체가 꺼진 것과 구분한다.
+        this.lastInitFailure = state === 'Unauthorized' ? 'PERMISSION' : 'POWERED_OFF';
         this.onError?.('블루투스가 켜져 있지 않습니다');
         return false;
       }
@@ -652,6 +664,22 @@ class BleService {
       return state === 'PoweredOn';
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * 블루투스를 쓸 수 없는 이유까지 알려 주는 상태 확인.
+   * isBluetoothPoweredOn() 과 같은 기준(PoweredOn 이면 NONE)이며, 앱의 권한이 없는 경우(Unauthorized)만 따로 구분한다.
+   */
+  async getBluetoothIssue(): Promise<BluetoothIssue> {
+    try {
+      const state = await this.manager.state();
+      if (state === 'PoweredOn') {
+        return 'NONE';
+      }
+      return state === 'Unauthorized' ? 'PERMISSION' : 'POWERED_OFF';
+    } catch {
+      return 'POWERED_OFF';
     }
   }
 

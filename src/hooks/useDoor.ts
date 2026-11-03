@@ -22,6 +22,8 @@ export type OpenOutcome =
   | { status: 'FORBIDDEN'; reason?: string } // 권한 없음 (403)
   | { status: 'RATE_LIMITED' }
   | { status: 'OFFLINE' } // 서버에서 패킷을 받아야 하므로 오프라인에서는 열 수 없음
+  | { status: 'PERMISSION_DENIED' } // 앱의 블루투스(안드로이드는 위치 포함) 권한이 없음
+  | { status: 'BLUETOOTH_OFF' } // 블루투스가 꺼져 있음
   | { status: 'BLE_FAIL' } // 스캔·연결·전송 실패
   | { status: 'NO_RESPONSE' } // 도어락 무응답
   | { status: 'DOOR_FAIL' } // 도어락이 실패 응답
@@ -222,6 +224,13 @@ export const useDoor = (bleService: BleService | null) => {
       const initialized = await bleService.initialize();
       if (!initialized) {
         addLog('❌ BLE 초기화 실패', 'error');
+        // 권한 거부나 블루투스 꺼짐은 도어락 연결 실패와 해결 방법이 달라서 따로 알린다
+        if (bleService.lastInitFailure === 'PERMISSION') {
+          return { status: 'PERMISSION_DENIED' };
+        }
+        if (bleService.lastInitFailure === 'POWERED_OFF') {
+          return { status: 'BLUETOOTH_OFF' };
+        }
         return { status: 'BLE_FAIL' };
       }
 

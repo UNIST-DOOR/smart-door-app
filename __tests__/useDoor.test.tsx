@@ -213,4 +213,25 @@ describe('useDoor.openRoomDoor 서버 호출과 BLE 연결 동시 진행', () =>
     expect(ble.scanAndAutoConnect).toHaveBeenCalledTimes(2); // 재시도도 서버와 연결을 동시에 시작
     expect(mockSendPacket).toHaveBeenCalledTimes(2);
   });
+
+  describe('블루투스를 쓸 수 없을 때 이유별 결과', () => {
+    it.each([
+      ['PERMISSION', { status: 'PERMISSION_DENIED' }],
+      ['POWERED_OFF', { status: 'BLUETOOTH_OFF' }],
+      [null, { status: 'BLE_FAIL' }], // 이유를 모르면 예전과 같은 결과
+    ])('초기화 실패 이유 %s', async (reason, expected) => {
+      const ble: any = makeBle();
+      ble.initialize.mockResolvedValue(false);
+      ble.lastInitFailure = reason;
+      await mount(ble);
+
+      const { promise: outcome } = await start({ bleid: '301201' });
+      await advance(10);
+
+      await expect(outcome).resolves.toEqual(expected);
+      expect(issueMock).not.toHaveBeenCalled(); // 서버에 패킷을 요청하지 않는다
+      expect(ble.scanAndAutoConnect).not.toHaveBeenCalled();
+      expect(reportMock).not.toHaveBeenCalled();
+    });
+  });
 });

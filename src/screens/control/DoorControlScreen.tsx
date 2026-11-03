@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Alert, TouchableOpacity, StatusBar, Image, ActivityIndicator, Vibration, Modal, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, ScrollView, Alert, TouchableOpacity, StatusBar, Image, ActivityIndicator, Vibration, Modal, Platform, Linking } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBLE } from '../../hooks/useBLE';
@@ -23,6 +23,12 @@ interface UserInfo {
   checkOutTime?: string;
 }
 
+const BLUETOOTH_OFF_MESSAGE = '블루투스가 꺼져 있습니다.\n설정에서 블루투스를 켜주세요.';
+const BLUETOOTH_PERMISSION_MESSAGE =
+  Platform.OS === 'ios'
+    ? '도어락을 열려면 이 앱의 블루투스 사용을 허용해야 합니다.\n설정에서 블루투스를 켜 주세요.'
+    : "도어락을 열려면 권한이 필요합니다.\n설정의 권한에서 '근처 기기'와 '위치'를 허용해 주세요.";
+
 interface DoorControlScreenProps {
   onLogout: () => void;
   userInfo: UserInfo | null;
@@ -34,13 +40,40 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
   const [autoAlertVisible, setAutoAlertVisible] = useState(false);
   const [autoAlertTitle, setAutoAlertTitle] = useState<string>('');
   const [autoAlertMessage, setAutoAlertMessage] = useState<string>('');
+  // 이전 알림의 닫기 타이머가 남아 새 알림을 일찍 닫지 않도록 하나만 유지한다
+  const autoAlertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showAutoAlert = (title: string, message: string, durationMs = 3000) => {
     setAutoAlertTitle(title);
     setAutoAlertMessage(message);
     setAutoAlertVisible(true);
-    setTimeout(() => setAutoAlertVisible(false), durationMs);
+    if (autoAlertTimerRef.current) {
+      clearTimeout(autoAlertTimerRef.current);
+    }
+    autoAlertTimerRef.current = setTimeout(() => setAutoAlertVisible(false), durationMs);
   };
-  
+  useEffect(() => {
+    return () => {
+      if (autoAlertTimerRef.current) {
+        clearTimeout(autoAlertTimerRef.current);
+      }
+    };
+  }, []);
+
+  // 문 열기 버튼을 연타해도 한 번에 하나만 실행되도록 누르는 즉시 잠근다.
+  // (버튼 비활성화는 상태값이라 블루투스 상태 확인(await) 사이에 한 번 더 눌리는 것을 막지 못한다)
+  const openingLockRef = useRef(false);
+  const runExclusive = async (task: () => Promise<void>) => {
+    if (openingLockRef.current) {
+      return;
+    }
+    openingLockRef.current = true;
+    try {
+      await task();
+    } finally {
+      openingLockRef.current = false;
+    }
+  };
+
   const {
     isConnected,
     bleService,
@@ -68,6 +101,10 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         return '서버와 통신하지 못했습니다.\n잠시 후 다시 시도해 주세요.\n계속되면 관리자에게 문의해 주세요.';
       case 'UNAUTHORIZED':
         return '로그인이 만료되었습니다.\n로그아웃 후 다시 로그인해 주세요.';
+      case 'PERMISSION_DENIED':
+        return BLUETOOTH_PERMISSION_MESSAGE;
+      case 'BLUETOOTH_OFF':
+        return BLUETOOTH_OFF_MESSAGE;
       case 'BLE_FAIL':
         return '도어락과 연결하지 못했습니다.\n도어락 가까이에서 다시 시도해주세요.';
       case 'NO_RESPONSE':
@@ -77,6 +114,46 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
       default:
         return '도어락 열기에 실패했습니다.\n다시 시도해주세요.';
     }
+  };
+
+  // 권한이 없으면 앱 설정 화면으로 보내 준다 (거부 후 "다시 묻지 않음"이면 설정에서만 바꿀 수 있다)
+  const showPermissionAlert = () => {
+    Alert.alert('블루투스 권한이 필요합니다', BLUETOOTH_PERMISSION_MESSAGE, [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '설정 열기',
+        onPress: () => {
+          Linking.openSettings().catch(() => {});
+        },
+      },
+    ]);
+  };
+
+  /**
+   * 문 열기 전 블루투스 상태 확인. 쓸 수 없으면 이유에 맞는 안내를 띄우고 false 를 돌려준다.
+   * (꺼져 있음 → 켜 달라고 안내 / 권한 없음 → 설정 열기 안내)
+   */
+  const checkBluetoothBeforeOpen = async (): Promise<boolean> => {
+    if (!bleService) {
+      // 앱을 막 켠 직후 블루투스 준비가 끝나기 전. 예전에는 이때도 "블루투스가 꺼져 있습니다"가 떴다.
+      Alert.alert('알림', '블루투스를 준비하는 중입니다.\n잠시 후 다시 시도해 주세요.');
+      return false;
+    }
+    let issue = await bleService.getBluetoothIssue();
+    if (issue === 'PERMISSION' && Platform.OS === 'android') {
+      // 안드로이드는 처음 한 번 거부했을 뿐이면 여기서 시스템 권한 창을 다시 띄울 수 있다
+      const granted = await bleService.requestBlePermissions();
+      issue = granted ? await bleService.getBluetoothIssue() : 'PERMISSION';
+    }
+    if (issue === 'PERMISSION') {
+      showPermissionAlert();
+      return false;
+    }
+    if (issue === 'POWERED_OFF') {
+      Alert.alert('알림', BLUETOOTH_OFF_MESSAGE);
+      return false;
+    }
+    return true;
   };
 
   // fo_door_tran 일시 포맷팅(IDATE+ITIME / ODATE+OTIME)
@@ -144,15 +221,14 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
     return { officeBuilding: office, phone };
   };
 
-  const handleOpenDoor = async () => {
+  const openDoorFlow = async () => {
     // 이용 기간 만료 차단
     if (isStayExpired()) {
       Alert.alert('알림', '기숙사 이용 기간이 만료되었습니다.');
       return;
     }
-    // 블루투스 전원 상태 확인
-    if (!await bleService?.isBluetoothPoweredOn()) {
-      Alert.alert('알림', '블루투스가 꺼져 있습니다.설정에서 블루투스를 켜주세요.');
+    // 블루투스 상태 확인 (꺼짐 / 권한 없음을 구분해 안내)
+    if (!(await checkBluetoothBeforeOpen())) {
       return;
     }
     // 햅틱 피드백 (안전하게 실행)
@@ -176,7 +252,7 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         
         // 여전히 초기화되지 않았으면 오류
         if (!isInitialized || !bleService) {
-          Alert.alert('오류', 'BLE 서비스 초기화에 실패했습니다.');
+          Alert.alert('오류', '도어락과 통신할 준비가 되지 않았습니다.\n앱을 다시 실행해 주세요.');
           return;
         }
       }
@@ -212,27 +288,31 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         }).catch(err => console.warn('[로그] 도어락 로그 전송 실패:', err));
       } else if (outcome.status === 'UPGRADE_REQUIRED') {
         showUpgradeAlert();
+      } else if (outcome.status === 'PERMISSION_DENIED') {
+        showPermissionAlert();
       } else {
         Alert.alert('실패', openFailureMessage(outcome));
       }
     } catch (error) {
-      Alert.alert('오류', `문열기 중 오류가 발생했습니다: ${error}`);
+      // 원인은 개발자용 로그로만 남기고, 학생에게는 알아볼 수 있는 문구를 보여 준다
+      console.warn('[문열기] 예기치 않은 오류:', error);
+      Alert.alert('오류', '문을 여는 중 문제가 발생했습니다.\n다시 시도해 주세요.');
     } finally {
       setIsRoomOpening(false);
     }
   };
+  const handleOpenDoor = () => runExclusive(openDoorFlow);
 
 
 
-  const handleFrontDoorOpen = async () => {
+  const frontDoorFlow = async () => {
     // 이용 기간 만료 차단
     if (isStayExpired()) {
       Alert.alert('알림', '기숙사 이용 기간이 만료되었습니다.');
       return;
     }
-    // 블루투스 전원 상태 확인
-    if (!await bleService?.isBluetoothPoweredOn()) {
-      Alert.alert('알림', '블루투스가 꺼져 있습니다.\n설정에서 블루투스를 켜주세요.');
+    // 블루투스 상태 확인 (꺼짐 / 권한 없음을 구분해 안내)
+    if (!(await checkBluetoothBeforeOpen())) {
       return;
     }
     // 햅틱 피드백 (안전하게 실행)
@@ -256,7 +336,7 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
         
         // 여전히 초기화되지 않았으면 오류
         if (!isInitialized || !bleService) {
-          Alert.alert('오류', 'BLE 서비스 초기화에 실패했습니다.');
+          Alert.alert('오류', '도어락과 통신할 준비가 되지 않았습니다.\n앱을 다시 실행해 주세요.');
           return;
         }
       }
@@ -278,15 +358,23 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
           platform: Platform.OS,
           doorType: 'relay',
         }).catch(err => console.warn('[로그] 공동현관문 로그 전송 실패:', err));
+      } else if (bleService?.lastInitFailure === 'PERMISSION') {
+        // 문 열기 직전에 권한이 사라진 드문 경우
+        showPermissionAlert();
+      } else if (bleService?.lastInitFailure === 'POWERED_OFF') {
+        Alert.alert('알림', BLUETOOTH_OFF_MESSAGE);
       } else {
         Alert.alert('실패', '공동현관문 열기에 실패했습니다.\n다시 시도해주세요.');
       }
     } catch (error) {
-      Alert.alert('오류', `공동현관문 열기 중 오류가 발생했습니다: ${error}`);
+      // 원인은 개발자용 로그로만 남기고, 학생에게는 알아볼 수 있는 문구를 보여 준다
+      console.warn('[공동현관문] 예기치 않은 오류:', error);
+      Alert.alert('오류', '공동현관문을 여는 중 문제가 발생했습니다.\n다시 시도해 주세요.');
     } finally {
       setIsEntranceOpening(false);
     }
   };
+  const handleFrontDoorOpen = () => runExclusive(frontDoorFlow);
 
   const handleInquiry = () => {
     const { officeBuilding, phone } = resolveOfficeForBuilding(userInfo?.building);
@@ -398,7 +486,7 @@ export const DoorControlScreen: React.FC<DoorControlScreenProps> = ({ onLogout, 
                   <Icon name={isConnected ? 'bluetooth' : 'bluetooth-off'} size={24} color={isConnected ? '#44C1C4' : '#64748B'} />
                 </View>
                 <Text style={[styles.timeValue, isConnected ? styles.statusTextOn : styles.statusTextOff, styles.connectionChipText]}>
-                  {isConnected ? '연결됨' : '연결 대기'}
+                  {isConnected ? '연결됨' : '대기 중'}
                 </Text>
               </View>
             </View>
